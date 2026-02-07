@@ -43,6 +43,7 @@ const bonusItems = computed(() => [
     value: formatPercent(skillBonuses.value.currencyMultiplier - 1),
   },
 ])
+
 </script>
 
 <template>
@@ -187,6 +188,7 @@ const bonusItems = computed(() => [
           </div>
         </div>
       </div>
+
     </section>
   </main>
 </template>

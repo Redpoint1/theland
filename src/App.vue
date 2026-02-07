@@ -34,6 +34,7 @@ onBeforeUnmount(() => {
       <div class="nav-links">
         <RouterLink to="/" class="nav-link">Sanctum</RouterLink>
         <RouterLink to="/combat" class="nav-link">Fighting Grounds</RouterLink>
+        <RouterLink to="/inventory" class="nav-link">Inventory</RouterLink>
       </div>
     </nav>
     <section class="hud">

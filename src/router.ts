@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import CombatView from './views/CombatView.vue'
+import InventoryView from './views/InventoryView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +15,11 @@ const router = createRouter({
       path: '/combat',
       name: 'combat',
       component: CombatView,
+    },
+    {
+      path: '/inventory',
+      name: 'inventory',
+      component: InventoryView,
     },
   ],
 })

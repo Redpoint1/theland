@@ -43,6 +43,26 @@ export interface EnemyType {
   rewardFactor: number
 }
 
+export type ItemQuality = 'Common' | 'Uncommon' | 'Rare' | 'Epic'
+export type ItemType = 'Equip' | 'Resource' | 'Consumable' | 'Quest'
+
+export interface ItemDef {
+  id: string
+  name: string
+  quality: ItemQuality
+  type: ItemType
+  subtype: string
+  description: string
+  maxStack: number
+  priceCopper: number
+}
+
+export interface InventorySlot {
+  id: number
+  itemId?: string
+  quantity: number
+}
+
 export type CombatLogType = 'combat' | 'damage' | 'kill' | 'rest' | 'system'
 
 export interface CombatLogEntry {
@@ -65,7 +85,7 @@ export interface Zone {
     skillExp: number
     statExp: number
   }
-  enemies: EnemyType[]
+  enemies: [EnemyType, ...EnemyType[]]
 }
 
 const tickMs = 1000
@@ -222,6 +242,143 @@ export const useGameStore = defineStore('game', () => {
       },
     },
   ])
+
+  const baseInventorySlots = 30
+  let inventorySlotId = 0
+
+  const itemDefs = reactive<Record<string, ItemDef>>({
+    'mist-herb': {
+      id: 'mist-herb',
+      name: 'Mist Herb',
+      quality: 'Common',
+      type: 'Resource',
+      subtype: 'Foraging',
+      description: 'A fragrant herb used in basic potions.',
+      maxStack: 50,
+      priceCopper: 3,
+    },
+    'goblin-ear': {
+      id: 'goblin-ear',
+      name: 'Goblin Ear',
+      quality: 'Uncommon',
+      type: 'Quest',
+      subtype: 'Trophy',
+      description: 'Proof of a goblin raid defeated.',
+      maxStack: 20,
+      priceCopper: 8,
+    },
+    'iron-ore': {
+      id: 'iron-ore',
+      name: 'Iron Ore',
+      quality: 'Common',
+      type: 'Resource',
+      subtype: 'Mining',
+      description: 'Raw ore ready for smelting.',
+      maxStack: 40,
+      priceCopper: 6,
+    },
+    'mana-crystal': {
+      id: 'mana-crystal',
+      name: 'Mana Crystal',
+      quality: 'Rare',
+      type: 'Resource',
+      subtype: 'Arcana',
+      description: 'A crystal infused with condensed mana.',
+      maxStack: 10,
+      priceCopper: 45,
+    },
+    'leather-helm': {
+      id: 'leather-helm',
+      name: 'Leather Helm',
+      quality: 'Common',
+      type: 'Equip',
+      subtype: 'Helm',
+      description: 'Basic protection for the head.',
+      maxStack: 1,
+      priceCopper: 25,
+    },
+  })
+
+  const inventory = reactive<InventorySlot[]>([])
+
+  const maxInventorySlots = computed(
+    () => baseInventorySlots + Math.floor(stats.Strength.value / 5),
+  )
+
+  const getItemDef = (itemId: string) => itemDefs[itemId]
+
+  const createSlot = (itemId?: string, quantity = 0): InventorySlot => ({
+    id: (inventorySlotId += 1),
+    itemId,
+    quantity,
+  })
+
+  const createEmptySlot = (index: number): InventorySlot => ({
+    id: -(index + 1),
+    quantity: 0,
+  })
+
+  const addItem = (itemId: string, amount: number) => {
+    const def = getItemDef(itemId)
+    if (!def) return
+
+    let remaining = amount
+    while (remaining > 0) {
+      let slot =
+        def.maxStack > 1
+          ? inventory.find((entry) => entry.itemId === itemId && entry.quantity < def.maxStack)
+          : undefined
+
+      if (!slot) {
+        if (inventory.length >= maxInventorySlots.value) return
+        slot = createSlot(itemId, 0)
+        inventory.push(slot)
+      }
+
+      const space = def.maxStack - slot.quantity
+      const addNow = Math.min(space, remaining)
+      slot.quantity += addNow
+      remaining -= addNow
+    }
+  }
+
+  const sellFromSlot = (slotId: number, amount: number | 'all') => {
+    const slot = inventory.find((entry) => entry.id === slotId)
+    if (!slot || !slot.itemId) return
+    const def = getItemDef(slot.itemId)
+    if (!def) return
+
+    const sellQty = amount === 'all' ? slot.quantity : Math.min(slot.quantity, amount)
+    if (sellQty <= 0) return
+    slot.quantity -= sellQty
+    addCurrency({ copper: sellQty * def.priceCopper })
+
+    if (slot.quantity <= 0) {
+      const index = inventory.findIndex((entry) => entry.id === slotId)
+      if (index >= 0) inventory.splice(index, 1)
+    }
+  }
+
+  const inventorySlots = computed<InventorySlot[]>(() => {
+    const slots = [...inventory]
+    const emptyCount = Math.max(0, maxInventorySlots.value - slots.length)
+    for (let i = 0; i < emptyCount; i += 1) {
+      slots.push(createEmptySlot(i))
+    }
+    return slots
+  })
+
+  const usedInventorySlots = computed(() => inventory.length)
+
+  const seedInventory = () => {
+    addItem('mist-herb', 12)
+    addItem('goblin-ear', 3)
+    addItem('iron-ore', 18)
+    addItem('mana-crystal', 2)
+    addItem('leather-helm', 1)
+  }
+
+  seedInventory()
 
   const zones = reactive<Zone[]>([
     {
@@ -527,15 +684,7 @@ export const useGameStore = defineStore('game', () => {
 
   const defaultZone = zones[0] as Zone
 
-  const defaultEnemy: EnemyType =
-    defaultZone.enemies[0] ??
-    ({
-      id: 'stray',
-      name: 'Stray Beast',
-      powerFactor: 1,
-      hpFactor: 1,
-      rewardFactor: 1,
-    } satisfies EnemyType)
+  const defaultEnemy: EnemyType = defaultZone.enemies[0]
 
   const combat = reactive({
     active: false,
@@ -639,9 +788,8 @@ export const useGameStore = defineStore('game', () => {
     Math.floor(Math.random() * (max - min + 1)) + min
 
   const pickEnemy = (zone: Zone): EnemyType => {
-    const pool = zone.enemies.length ? zone.enemies : [defaultEnemy]
-    const index = Math.floor(Math.random() * pool.length)
-    return pool[index] ?? defaultEnemy
+    const index = Math.floor(Math.random() * zone.enemies.length)
+    return zone.enemies[index]!
   }
 
   const spawnEnemy = () => {
@@ -833,6 +981,14 @@ export const useGameStore = defineStore('game', () => {
     stats,
     skills,
     actions,
+    itemDefs,
+    inventory,
+    inventorySlots,
+    usedInventorySlots,
+    maxInventorySlots,
+    addItem,
+    sellFromSlot,
+    getItemDef,
     zones,
     combat,
     combatRewards,
