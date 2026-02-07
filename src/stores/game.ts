@@ -1,0 +1,802 @@
+import { computed, reactive, ref } from 'vue'
+import { defineStore } from 'pinia'
+
+export type StatKey = 'Strength' | 'Agility' | 'Vitality' | 'Spirit' | 'Intelligence'
+export type SkillKey = 'Combat' | 'Survival' | 'Harvesting' | 'Crafting' | 'Arcana'
+
+export interface Stat {
+  name: StatKey
+  value: number
+  exp: number
+  expToNext: number
+  description: string
+}
+
+export interface Skill {
+  name: SkillKey
+  level: number
+  exp: number
+  expToNext: number
+  description: string
+}
+
+export interface ActionGain {
+  exp?: number
+  stats?: Partial<Record<StatKey, number>>
+  skills?: Partial<Record<SkillKey, number>>
+  currency?: Partial<{ copper: number; silver: number; gold: number }>
+}
+
+export interface ActionItem {
+  id: string
+  name: string
+  description: string
+  active: boolean
+  gains: ActionGain
+}
+
+export interface EnemyType {
+  id: string
+  name: string
+  powerFactor: number
+  hpFactor: number
+  rewardFactor: number
+}
+
+export interface Zone {
+  id: string
+  name: string
+  description: string
+  levelMin: number
+  levelMax: number
+  basePower: number
+  baseRewards: {
+    exp: number
+    copper: number
+    skillExp: number
+    statExp: number
+  }
+  enemies: EnemyType[]
+}
+
+const tickMs = 1000
+
+export const useGameStore = defineStore('game', () => {
+  const paused = ref(false)
+
+  const character = reactive({
+    level: 1,
+    exp: 0,
+    expToNext: 120,
+  })
+
+  const currency = reactive({
+    copper: 25,
+    silver: 0,
+    gold: 0,
+  })
+
+  const stats = reactive<Record<StatKey, Stat>>({
+    Strength: {
+      name: 'Strength',
+      value: 8,
+      exp: 0,
+      expToNext: 90,
+      description: 'Power, lifting, melee force.',
+    },
+    Agility: {
+      name: 'Agility',
+      value: 7,
+      exp: 0,
+      expToNext: 90,
+      description: 'Speed, reflexes, dexterity.',
+    },
+    Vitality: {
+      name: 'Vitality',
+      value: 9,
+      exp: 0,
+      expToNext: 95,
+      description: 'Health, stamina, endurance.',
+    },
+    Spirit: {
+      name: 'Spirit',
+      value: 6,
+      exp: 0,
+      expToNext: 100,
+      description: 'Mana, willpower, recovery.',
+    },
+    Intelligence: {
+      name: 'Intelligence',
+      value: 7,
+      exp: 0,
+      expToNext: 100,
+      description: 'Knowledge, crafting, tactics.',
+    },
+  })
+
+  const skills = reactive<Record<SkillKey, Skill>>({
+    Combat: {
+      name: 'Combat',
+      level: 1,
+      exp: 0,
+      expToNext: 60,
+      description: 'Weapon handling and battle instincts.',
+    },
+    Survival: {
+      name: 'Survival',
+      level: 1,
+      exp: 0,
+      expToNext: 55,
+      description: 'Tracking, foraging, fieldcraft.',
+    },
+    Harvesting: {
+      name: 'Harvesting',
+      level: 1,
+      exp: 0,
+      expToNext: 50,
+      description: 'Gathering resources and loot.',
+    },
+    Crafting: {
+      name: 'Crafting',
+      level: 1,
+      exp: 0,
+      expToNext: 65,
+      description: 'Making gear and supplies.',
+    },
+    Arcana: {
+      name: 'Arcana',
+      level: 1,
+      exp: 0,
+      expToNext: 70,
+      description: 'Mana control and spellwork.',
+    },
+  })
+
+  const actions = reactive<ActionItem[]>([
+    {
+      id: 'train-strength',
+      name: 'Train Strength',
+      description: 'Lift, strike, and grind power gains.',
+      active: true,
+      gains: {
+        exp: 5,
+        stats: { Strength: 7, Vitality: 3 },
+        skills: { Combat: 3 },
+        currency: { copper: 2 },
+      },
+    },
+    {
+      id: 'forest-run',
+      name: 'Forest Run',
+      description: 'Sprint and weave through the wilds.',
+      active: false,
+      gains: {
+        exp: 4,
+        stats: { Agility: 6, Vitality: 2 },
+        skills: { Survival: 3 },
+        currency: { copper: 1 },
+      },
+    },
+    {
+      id: 'meditate',
+      name: 'Meditate',
+      description: 'Focus the core and gather mana.',
+      active: false,
+      gains: {
+        exp: 3,
+        stats: { Spirit: 7, Intelligence: 3 },
+        skills: { Arcana: 4 },
+      },
+    },
+    {
+      id: 'gather',
+      name: 'Gather Herbs',
+      description: 'Idle harvesting for simple income.',
+      active: false,
+      gains: {
+        exp: 2,
+        stats: { Agility: 2, Intelligence: 2 },
+        skills: { Harvesting: 5 },
+        currency: { copper: 6 },
+      },
+    },
+    {
+      id: 'craft',
+      name: 'Craft Supplies',
+      description: 'Turn finds into coin and skill.',
+      active: false,
+      gains: {
+        exp: 3,
+        stats: { Intelligence: 5 },
+        skills: { Crafting: 5 },
+        currency: { copper: 8 },
+      },
+    },
+  ])
+
+  const zones = reactive<Zone[]>([
+    {
+      id: 'mist-outskirts',
+      name: 'Mist Village Outskirts',
+      description: 'Wolves and bandits prowl the village edge.',
+      levelMin: 1,
+      levelMax: 5,
+      basePower: 6,
+      baseRewards: { exp: 16, copper: 10, skillExp: 6, statExp: 3 },
+      enemies: [
+        { id: 'wolf', name: 'Wild Wolf', powerFactor: 0.9, hpFactor: 0.9, rewardFactor: 0.9 },
+        { id: 'bandit', name: 'Bandit Scout', powerFactor: 1.0, hpFactor: 1.0, rewardFactor: 1.0 },
+        { id: 'boar', name: 'Dire Boar', powerFactor: 1.1, hpFactor: 1.15, rewardFactor: 1.1 },
+      ],
+    },
+    {
+      id: 'mist-forest',
+      name: 'Mist Forest',
+      description: 'Dense woods with lurking goblins.',
+      levelMin: 4,
+      levelMax: 8,
+      basePower: 10,
+      baseRewards: { exp: 22, copper: 14, skillExp: 7, statExp: 3 },
+      enemies: [
+        { id: 'goblin', name: 'Forest Goblin', powerFactor: 1.0, hpFactor: 0.95, rewardFactor: 1.0 },
+        { id: 'stalker', name: 'Mist Stalker', powerFactor: 1.1, hpFactor: 1.05, rewardFactor: 1.1 },
+        { id: 'spider', name: 'Shadow Spider', powerFactor: 0.95, hpFactor: 1.0, rewardFactor: 0.95 },
+      ],
+    },
+    {
+      id: 'river-delle',
+      name: 'River Delle',
+      description: 'River spirits and crocodiles contest the banks.',
+      levelMin: 7,
+      levelMax: 12,
+      basePower: 14,
+      baseRewards: { exp: 28, copper: 18, skillExp: 8, statExp: 4 },
+      enemies: [
+        { id: 'croc', name: 'River Croc', powerFactor: 1.05, hpFactor: 1.15, rewardFactor: 1.1 },
+        { id: 'sprite', name: 'River Sprite', powerFactor: 0.9, hpFactor: 0.85, rewardFactor: 0.9 },
+        { id: 'lurker', name: 'Marsh Lurker', powerFactor: 1.0, hpFactor: 1.0, rewardFactor: 1.0 },
+      ],
+    },
+    {
+      id: 'goblin-warrens',
+      name: 'Goblin Warrens',
+      description: 'Tunnels under the hills, crawling with goblins.',
+      levelMin: 10,
+      levelMax: 15,
+      basePower: 18,
+      baseRewards: { exp: 34, copper: 24, skillExp: 10, statExp: 4 },
+      enemies: [
+        { id: 'raider', name: 'Goblin Raider', powerFactor: 1.0, hpFactor: 1.0, rewardFactor: 1.0 },
+        { id: 'shaman', name: 'Goblin Shaman', powerFactor: 1.1, hpFactor: 0.95, rewardFactor: 1.1 },
+        { id: 'brute', name: 'Goblin Brute', powerFactor: 1.2, hpFactor: 1.15, rewardFactor: 1.2 },
+      ],
+    },
+    {
+      id: 'shadow-fen',
+      name: 'Shadow Fen',
+      description: 'Swamp mists hide venom and undead.',
+      levelMin: 14,
+      levelMax: 20,
+      basePower: 22,
+      baseRewards: { exp: 40, copper: 30, skillExp: 12, statExp: 5 },
+      enemies: [
+        { id: 'stalker', name: 'Fen Stalker', powerFactor: 1.05, hpFactor: 1.0, rewardFactor: 1.05 },
+        { id: 'bogwraith', name: 'Bog Wraith', powerFactor: 1.15, hpFactor: 0.9, rewardFactor: 1.15 },
+        { id: 'slime', name: 'Toxic Slime', powerFactor: 0.95, hpFactor: 1.2, rewardFactor: 0.95 },
+      ],
+    },
+    {
+      id: 'darkwood',
+      name: 'Darkwood',
+      description: 'Ancient trees and shadow beasts.',
+      levelMin: 18,
+      levelMax: 25,
+      basePower: 26,
+      baseRewards: { exp: 48, copper: 36, skillExp: 14, statExp: 5 },
+      enemies: [
+        { id: 'lynx', name: 'Shadow Lynx', powerFactor: 1.05, hpFactor: 0.95, rewardFactor: 1.05 },
+        { id: 'treant', name: 'Darkwood Treant', powerFactor: 1.2, hpFactor: 1.2, rewardFactor: 1.2 },
+        { id: 'shade', name: 'Night Shade', powerFactor: 1.0, hpFactor: 0.9, rewardFactor: 1.0 },
+      ],
+    },
+    {
+      id: 'stonefist-range',
+      name: 'Stonefist Range',
+      description: 'Rocky passes and ogre patrols.',
+      levelMin: 22,
+      levelMax: 30,
+      basePower: 30,
+      baseRewards: { exp: 58, copper: 44, skillExp: 16, statExp: 6 },
+      enemies: [
+        { id: 'ogre', name: 'Ogre Brute', powerFactor: 1.2, hpFactor: 1.25, rewardFactor: 1.2 },
+        { id: 'bear', name: 'Stone Bear', powerFactor: 1.0, hpFactor: 1.1, rewardFactor: 1.0 },
+        { id: 'raider', name: 'Cliff Raider', powerFactor: 1.05, hpFactor: 0.95, rewardFactor: 1.05 },
+      ],
+    },
+    {
+      id: 'silverpine-forest',
+      name: 'Silverpine Forest',
+      description: 'Silver bark and fey hunters.',
+      levelMin: 26,
+      levelMax: 34,
+      basePower: 34,
+      baseRewards: { exp: 66, copper: 52, skillExp: 18, statExp: 6 },
+      enemies: [
+        { id: 'fey', name: 'Fey Tracker', powerFactor: 1.05, hpFactor: 0.95, rewardFactor: 1.05 },
+        { id: 'stag', name: 'Silver Stag', powerFactor: 0.95, hpFactor: 1.0, rewardFactor: 0.95 },
+        { id: 'warden', name: 'Grove Warden', powerFactor: 1.15, hpFactor: 1.1, rewardFactor: 1.15 },
+      ],
+    },
+    {
+      id: 'great-plains',
+      name: 'Great Plains',
+      description: 'Stampedes and roaming beast packs.',
+      levelMin: 30,
+      levelMax: 38,
+      basePower: 38,
+      baseRewards: { exp: 74, copper: 60, skillExp: 20, statExp: 7 },
+      enemies: [
+        { id: 'ripper', name: 'Plains Ripper', powerFactor: 1.1, hpFactor: 1.0, rewardFactor: 1.1 },
+        { id: 'hornbeast', name: 'Thunderhorn', powerFactor: 1.2, hpFactor: 1.2, rewardFactor: 1.2 },
+        { id: 'scavenger', name: 'Sky Scavenger', powerFactor: 0.95, hpFactor: 0.9, rewardFactor: 0.95 },
+      ],
+    },
+    {
+      id: 'ashen-barrens',
+      name: 'Ashen Barrens',
+      description: 'Scorched earth and ash drakes.',
+      levelMin: 34,
+      levelMax: 42,
+      basePower: 42,
+      baseRewards: { exp: 84, copper: 70, skillExp: 22, statExp: 7 },
+      enemies: [
+        { id: 'drake', name: 'Ash Drake', powerFactor: 1.2, hpFactor: 1.1, rewardFactor: 1.25 },
+        { id: 'cinder', name: 'Cinder Hound', powerFactor: 1.0, hpFactor: 0.95, rewardFactor: 1.0 },
+        { id: 'pyre', name: 'Pyre Elemental', powerFactor: 1.15, hpFactor: 1.2, rewardFactor: 1.2 },
+      ],
+    },
+    {
+      id: 'sunken-ruins',
+      name: 'Sunken Ruins',
+      description: 'Ancient halls submerged in mana tides.',
+      levelMin: 38,
+      levelMax: 46,
+      basePower: 46,
+      baseRewards: { exp: 94, copper: 82, skillExp: 24, statExp: 8 },
+      enemies: [
+        { id: 'sentinel', name: 'Ruins Sentinel', powerFactor: 1.15, hpFactor: 1.2, rewardFactor: 1.2 },
+        { id: 'warden', name: 'Abyss Warden', powerFactor: 1.1, hpFactor: 1.0, rewardFactor: 1.1 },
+        { id: 'eel', name: 'Mana Eel', powerFactor: 0.95, hpFactor: 0.9, rewardFactor: 0.95 },
+      ],
+    },
+    {
+      id: 'thunder-steppe',
+      name: 'Thunder Steppe',
+      description: 'Storm-charged beasts and lightning spirits.',
+      levelMin: 42,
+      levelMax: 50,
+      basePower: 50,
+      baseRewards: { exp: 104, copper: 94, skillExp: 26, statExp: 8 },
+      enemies: [
+        { id: 'charger', name: 'Storm Charger', powerFactor: 1.2, hpFactor: 1.1, rewardFactor: 1.2 },
+        { id: 'sprite', name: 'Lightning Sprite', powerFactor: 0.95, hpFactor: 0.85, rewardFactor: 0.95 },
+        { id: 'howler', name: 'Thunder Howler', powerFactor: 1.1, hpFactor: 1.05, rewardFactor: 1.1 },
+      ],
+    },
+    {
+      id: 'wyvern-cliffs',
+      name: 'Wyvern Cliffs',
+      description: 'Sheer cliffs ruled by winged predators.',
+      levelMin: 46,
+      levelMax: 54,
+      basePower: 54,
+      baseRewards: { exp: 116, copper: 110, skillExp: 28, statExp: 9 },
+      enemies: [
+        { id: 'wyvern', name: 'Cliff Wyvern', powerFactor: 1.2, hpFactor: 1.15, rewardFactor: 1.2 },
+        { id: 'harpy', name: 'Sky Harpy', powerFactor: 1.05, hpFactor: 0.9, rewardFactor: 1.05 },
+        { id: 'eagle', name: 'Ridge Eagle', powerFactor: 0.95, hpFactor: 0.85, rewardFactor: 0.95 },
+      ],
+    },
+    {
+      id: 'crystal-caverns',
+      name: 'Crystal Caverns',
+      description: 'Glittering tunnels, razor crystal beasts.',
+      levelMin: 50,
+      levelMax: 60,
+      basePower: 60,
+      baseRewards: { exp: 130, copper: 128, skillExp: 30, statExp: 9 },
+      enemies: [
+        { id: 'maw', name: 'Crystal Maw', powerFactor: 1.2, hpFactor: 1.2, rewardFactor: 1.2 },
+        { id: 'shard', name: 'Shardling', powerFactor: 0.9, hpFactor: 0.9, rewardFactor: 0.9 },
+        { id: 'golem', name: 'Crystal Golem', powerFactor: 1.25, hpFactor: 1.3, rewardFactor: 1.25 },
+      ],
+    },
+    {
+      id: 'obsidian-badlands',
+      name: 'Obsidian Badlands',
+      description: 'Black glass dunes and fireborne.',
+      levelMin: 56,
+      levelMax: 66,
+      basePower: 66,
+      baseRewards: { exp: 144, copper: 150, skillExp: 32, statExp: 10 },
+      enemies: [
+        { id: 'hound', name: 'Obsidian Hound', powerFactor: 1.15, hpFactor: 1.05, rewardFactor: 1.15 },
+        { id: 'basilisk', name: 'Glass Basilisk', powerFactor: 1.25, hpFactor: 1.2, rewardFactor: 1.25 },
+        { id: 'raider', name: 'Ash Raider', powerFactor: 1.0, hpFactor: 0.95, rewardFactor: 1.0 },
+      ],
+    },
+    {
+      id: 'ancient-grove',
+      name: 'Ancient Grove',
+      description: 'World trees guarded by elder spirits.',
+      levelMin: 62,
+      levelMax: 72,
+      basePower: 72,
+      baseRewards: { exp: 160, copper: 176, skillExp: 34, statExp: 10 },
+      enemies: [
+        { id: 'guardian', name: 'Grove Guardian', powerFactor: 1.2, hpFactor: 1.25, rewardFactor: 1.2 },
+        { id: 'archon', name: 'Ancient Archon', powerFactor: 1.3, hpFactor: 1.1, rewardFactor: 1.3 },
+        { id: 'sprite', name: 'Verdant Sprite', powerFactor: 0.95, hpFactor: 0.9, rewardFactor: 0.95 },
+      ],
+    },
+    {
+      id: 'frostfang-peaks',
+      name: 'Frostfang Peaks',
+      description: 'Frozen passes and ice-tusk beasts.',
+      levelMin: 68,
+      levelMax: 78,
+      basePower: 78,
+      baseRewards: { exp: 178, copper: 204, skillExp: 36, statExp: 11 },
+      enemies: [
+        { id: 'tusk', name: 'Frost Tusk', powerFactor: 1.2, hpFactor: 1.2, rewardFactor: 1.2 },
+        { id: 'yeti', name: 'Ice Yeti', powerFactor: 1.3, hpFactor: 1.3, rewardFactor: 1.3 },
+        { id: 'wisp', name: 'Frost Wisp', powerFactor: 0.9, hpFactor: 0.85, rewardFactor: 0.9 },
+      ],
+    },
+    {
+      id: 'bloodmoon-marsh',
+      name: 'Bloodmoon Marsh',
+      description: 'Cursed waters and moonlit predators.',
+      levelMin: 74,
+      levelMax: 84,
+      basePower: 84,
+      baseRewards: { exp: 196, copper: 236, skillExp: 38, statExp: 11 },
+      enemies: [
+        { id: 'stalker', name: 'Bloodmoon Stalker', powerFactor: 1.25, hpFactor: 1.1, rewardFactor: 1.25 },
+        { id: 'wraith', name: 'Marsh Wraith', powerFactor: 1.15, hpFactor: 0.95, rewardFactor: 1.15 },
+        { id: 'lurker', name: 'Moonlit Lurker', powerFactor: 1.05, hpFactor: 1.05, rewardFactor: 1.05 },
+      ],
+    },
+    {
+      id: 'celestial-ridge',
+      name: 'Celestial Ridge',
+      description: 'High ridges infused with star mana.',
+      levelMin: 80,
+      levelMax: 92,
+      basePower: 92,
+      baseRewards: { exp: 218, copper: 270, skillExp: 40, statExp: 12 },
+      enemies: [
+        { id: 'warden', name: 'Celestial Warden', powerFactor: 1.25, hpFactor: 1.2, rewardFactor: 1.25 },
+        { id: 'saber', name: 'Star Saber', powerFactor: 1.15, hpFactor: 1.0, rewardFactor: 1.15 },
+        { id: 'seer', name: 'Ridge Seer', powerFactor: 1.05, hpFactor: 0.95, rewardFactor: 1.05 },
+      ],
+    },
+    {
+      id: 'dragons-spine',
+      name: "Dragon's Spine",
+      description: 'The apex range where elder wyrms rule.',
+      levelMin: 88,
+      levelMax: 100,
+      basePower: 100,
+      baseRewards: { exp: 240, copper: 320, skillExp: 44, statExp: 12 },
+      enemies: [
+        { id: 'scion', name: 'Wyrm Scion', powerFactor: 1.3, hpFactor: 1.25, rewardFactor: 1.3 },
+        { id: 'ancient', name: 'Ancient Drake', powerFactor: 1.35, hpFactor: 1.3, rewardFactor: 1.35 },
+        { id: 'wyrmling', name: 'Feral Wyrmling', powerFactor: 1.15, hpFactor: 1.05, rewardFactor: 1.15 },
+      ],
+    },
+  ])
+
+  const statList = computed(() => Object.values(stats))
+  const skillList = computed(() => Object.values(skills))
+
+  const skillBonuses = computed(() => {
+    const combatLevel = skills.Combat.level
+    const survivalLevel = skills.Survival.level
+    const arcanaLevel = skills.Arcana.level
+    const craftingLevel = skills.Crafting.level
+    const harvestingLevel = skills.Harvesting.level
+
+    return {
+      combatDamageMultiplier: 1 + combatLevel * 0.05,
+      combatDamageReduction: Math.min(0.8, combatLevel * 0.05),
+      regenMultiplier: 1 + survivalLevel * 0.02,
+      expMultiplier: 1 + arcanaLevel * 0.02,
+      currencyMultiplier: 1 + craftingLevel * 0.01 + harvestingLevel * 0.01,
+    }
+  })
+
+  const defaultZone = zones[0] as Zone
+
+  const defaultEnemy: EnemyType =
+    defaultZone.enemies[0] ??
+    ({
+      id: 'stray',
+      name: 'Stray Beast',
+      powerFactor: 1,
+      hpFactor: 1,
+      rewardFactor: 1,
+    } satisfies EnemyType)
+
+  const combat = reactive({
+    active: false,
+    resting: false,
+    zoneId: defaultZone.id,
+    enemyName: defaultEnemy.name,
+    enemyLevel: defaultZone.levelMin,
+    enemyHp: 40,
+    enemyMaxHp: 40,
+    enemyPower: defaultZone.basePower,
+  })
+
+  const combatRewards = reactive({
+    exp: defaultZone.baseRewards.exp,
+    copper: defaultZone.baseRewards.copper,
+    skillExp: defaultZone.baseRewards.skillExp,
+    statExp: defaultZone.baseRewards.statExp,
+  })
+
+  const currentZone = computed((): Zone => zones.find((zone) => zone.id === combat.zoneId) ?? defaultZone)
+  const maxHp = computed(() => Math.floor(character.level * 8 + stats.Vitality.value * 12))
+  const playerHp = ref(maxHp.value)
+
+  const progressPercent = (current: number, max: number) =>
+    Math.min(100, Math.floor((current / Math.max(1, max)) * 100))
+
+  const normalizeCurrency = () => {
+    if (currency.copper >= 100) {
+      currency.silver += Math.floor(currency.copper / 100)
+      currency.copper = currency.copper % 100
+    }
+    if (currency.silver >= 100) {
+      currency.gold += Math.floor(currency.silver / 100)
+      currency.silver = currency.silver % 100
+    }
+  }
+
+  const addCurrency = (gain?: Partial<{ copper: number; silver: number; gold: number }>) => {
+    if (!gain) return
+    const bonus = skillBonuses.value.currencyMultiplier
+    currency.copper += Math.floor((gain.copper ?? 0) * bonus)
+    currency.silver += Math.floor((gain.silver ?? 0) * bonus)
+    currency.gold += Math.floor((gain.gold ?? 0) * bonus)
+    normalizeCurrency()
+  }
+
+  const addCharacterExp = (amount: number) => {
+    const bonus = skillBonuses.value.expMultiplier
+    character.exp += Math.floor(amount * bonus)
+    while (character.exp >= character.expToNext) {
+      character.exp -= character.expToNext
+      character.level += 1
+      character.expToNext = Math.floor(character.expToNext * 1.18 + 50)
+      statList.value.forEach((stat) => {
+        stat.value += 1
+      })
+    }
+  }
+
+  const addStatExp = (key: StatKey, amount: number) => {
+    const stat = stats[key]
+    stat.exp += amount
+    while (stat.exp >= stat.expToNext) {
+      stat.exp -= stat.expToNext
+      stat.value += 1
+      stat.expToNext = Math.floor(stat.expToNext * 1.2 + 15)
+    }
+  }
+
+  const addSkillExp = (key: SkillKey, amount: number) => {
+    const skill = skills[key]
+    skill.exp += amount
+    while (skill.exp >= skill.expToNext) {
+      skill.exp -= skill.expToNext
+      skill.level += 1
+      skill.expToNext = Math.floor(skill.expToNext * 1.22 + 10)
+    }
+  }
+
+  const randomInt = (min: number, max: number) =>
+    Math.floor(Math.random() * (max - min + 1)) + min
+
+  const pickEnemy = (zone: Zone): EnemyType | undefined => {
+    if (!zone.enemies.length) return undefined
+    const index = Math.floor(Math.random() * zone.enemies.length)
+    return zone.enemies[index]
+  }
+
+  const spawnEnemy = () => {
+    const zone = currentZone.value
+    const enemy = pickEnemy(zone) ?? defaultEnemy
+    const level = randomInt(zone.levelMin, zone.levelMax)
+    const baseHp = Math.floor(level * 10 * enemy.hpFactor + zone.basePower * 4)
+    const rewardScale = (1 + level * 0.06) * enemy.rewardFactor
+
+    combat.enemyLevel = level
+    combat.enemyName = enemy.name
+    combat.enemyPower = zone.basePower * enemy.powerFactor + level * 1.8
+    combat.enemyMaxHp = baseHp
+    combat.enemyHp = baseHp
+
+    combatRewards.exp = Math.floor(zone.baseRewards.exp * rewardScale)
+    combatRewards.copper = Math.floor(zone.baseRewards.copper * rewardScale)
+    combatRewards.skillExp = Math.floor(zone.baseRewards.skillExp * rewardScale)
+    combatRewards.statExp = Math.floor(zone.baseRewards.statExp * rewardScale)
+  }
+
+  const setZone = (zoneId: string) => {
+    combat.zoneId = zoneId
+    spawnEnemy()
+  }
+
+  const deactivateActions = () => {
+    actions.forEach((action) => {
+      action.active = false
+    })
+  }
+
+  const toggleCombat = () => {
+    combat.active = !combat.active
+    if (combat.active) {
+      combat.resting = false
+      deactivateActions()
+    }
+  }
+
+  const toggleResting = () => {
+    combat.resting = !combat.resting
+    if (combat.resting) {
+      combat.active = false
+      deactivateActions()
+    }
+  }
+
+  const toggleAction = (action: ActionItem) => {
+    if (combat.active) return
+    actions.forEach((item) => {
+      item.active = item.id === action.id ? !action.active : false
+    })
+  }
+
+  const runCombatTick = () => {
+    if (!combat.active) return
+    if (combat.enemyHp <= 0) {
+      spawnEnemy()
+    }
+
+    const playerPower =
+      character.level * 2 +
+      stats.Strength.value * 1.4 +
+      stats.Agility.value * 1.1 +
+      skills.Combat.level * 2 +
+      stats.Spirit.value * 0.4
+    const enemyPower = combat.enemyPower
+    const combatBonus = skillBonuses.value.combatDamageMultiplier
+    const damageReduction = skillBonuses.value.combatDamageReduction
+
+    const playerDamage = Math.max(
+      1,
+      Math.floor((playerPower - enemyPower * 0.5 + randomInt(0, 6)) * combatBonus),
+    )
+    combat.enemyHp = Math.max(0, combat.enemyHp - playerDamage)
+
+    if (combat.enemyHp === 0) {
+      addCharacterExp(combatRewards.exp)
+      addCurrency({ copper: combatRewards.copper })
+      addSkillExp('Combat', combatRewards.skillExp)
+      addSkillExp('Survival', Math.floor(combatRewards.skillExp * 0.4))
+      addStatExp('Strength', combatRewards.statExp)
+      addStatExp('Agility', combatRewards.statExp)
+      addStatExp('Vitality', combatRewards.statExp)
+      spawnEnemy()
+      return
+    }
+
+    const mitigation = stats.Vitality.value * 0.8 + stats.Agility.value * 0.4
+    const enemyDamageBase = Math.max(1, Math.floor(enemyPower - mitigation + randomInt(0, 4)))
+    const enemyDamage = Math.max(1, Math.floor(enemyDamageBase * (1 - damageReduction)))
+    playerHp.value = Math.max(0, playerHp.value - enemyDamage)
+
+    if (playerHp.value === 0) {
+      combat.active = false
+      combat.resting = true
+    }
+  }
+
+  const runIdleActions = () => {
+    if (combat.active || combat.resting) return
+    actions.forEach((action) => {
+      if (!action.active) return
+      if (action.gains.exp) {
+        addCharacterExp(action.gains.exp)
+      }
+      if (action.gains.stats) {
+        Object.entries(action.gains.stats).forEach(([key, amount]) => {
+          addStatExp(key as StatKey, amount ?? 0)
+        })
+      }
+      if (action.gains.skills) {
+        Object.entries(action.gains.skills).forEach(([key, amount]) => {
+          addSkillExp(key as SkillKey, amount ?? 0)
+        })
+      }
+      if (action.gains.currency) {
+        addCurrency(action.gains.currency)
+      }
+    })
+  }
+
+  const runTick = () => {
+    if (paused.value) return
+    if (playerHp.value > maxHp.value) {
+      playerHp.value = maxHp.value
+    }
+
+    if (combat.resting && playerHp.value < maxHp.value) {
+      const regenBase = Math.max(2, Math.floor(stats.Spirit.value * 1.2 + stats.Vitality.value * 0.4))
+      const regen = Math.floor(regenBase * skillBonuses.value.regenMultiplier)
+      playerHp.value = Math.min(maxHp.value, playerHp.value + regen)
+      if (playerHp.value >= maxHp.value) {
+        combat.resting = false
+      }
+    } else if (!combat.active && playerHp.value < maxHp.value) {
+      const regenBase = Math.max(1, Math.floor(stats.Spirit.value * 0.6))
+      const regen = Math.floor(regenBase * skillBonuses.value.regenMultiplier)
+      playerHp.value = Math.min(maxHp.value, playerHp.value + regen)
+    }
+
+    runCombatTick()
+    runIdleActions()
+  }
+
+  let timer: number | undefined
+
+  const startTicker = () => {
+    if (timer) return
+    spawnEnemy()
+    timer = window.setInterval(runTick, tickMs)
+  }
+
+  const stopTicker = () => {
+    if (!timer) return
+    window.clearInterval(timer)
+    timer = undefined
+  }
+
+  return {
+    tickMs,
+    paused,
+    character,
+    currency,
+    stats,
+    skills,
+    actions,
+    zones,
+    combat,
+    combatRewards,
+    playerHp,
+    maxHp,
+    statList,
+    skillList,
+    currentZone,
+    skillBonuses,
+    progressPercent,
+    addCurrency,
+    toggleCombat,
+    toggleResting,
+    toggleAction,
+    setZone,
+    startTicker,
+    stopTicker,
+  }
+})

@@ -1,0 +1,482 @@
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e6e9f2;
+  background-color: #0c111b;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1a2340 0%, #0c111b 55%, #080b12 100%);
+}
+
+#app {
+  padding: 0;
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 18px;
+  background: rgba(14, 20, 33, 0.9);
+  border: 1px solid rgba(80, 98, 130, 0.25);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.brand {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: #c7d4f2;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #c7d4f2;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  border-color: rgba(240, 197, 102, 0.5);
+  color: #f0c566;
+}
+
+.nav-link.router-link-active {
+  background: rgba(116, 210, 255, 0.2);
+  border-color: rgba(116, 210, 255, 0.8);
+  color: #c8f0ff;
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 16px;
+  background: rgba(10, 16, 28, 0.9);
+  border: 1px solid rgba(80, 98, 130, 0.25);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+}
+
+.hud-item {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(24, 34, 52, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
+.hud-item.wide {
+  min-width: 220px;
+  justify-content: space-between;
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fa2c6;
+}
+
+.hud-value {
+  font-weight: 600;
+  color: #e9f2ff;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  font-size: 2.6rem;
+}
+
+h2 {
+  font-size: 1.4rem;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0b111b;
+  background: linear-gradient(120deg, #f0c566 0%, #f5dd9d 100%);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(240, 197, 102, 0.2);
+}
+
+button.ghost {
+  background: transparent;
+  color: #f0c566;
+  border: 1px solid rgba(240, 197, 102, 0.5);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: center;
+  padding: 2rem;
+  border-radius: 24px;
+  background: rgba(16, 22, 35, 0.9);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(101, 120, 150, 0.2);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: #92a2c7;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #b8c3de;
+  max-width: 520px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.combat-buttons {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tick {
+  color: #8fa2c6;
+  font-size: 0.9rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.panel {
+  background: rgba(14, 20, 33, 0.9);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid rgba(80, 98, 130, 0.25);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.label {
+  color: #8fa2c6;
+  font-size: 0.85rem;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.exp-block {
+  min-width: 200px;
+  flex: 1;
+}
+
+.hp-block {
+  margin-top: 0.5rem;
+}
+
+.progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(77, 90, 117, 0.3);
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+
+.progress.thin {
+  height: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(120deg, #f0c566, #e6a93c);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.hp {
+  background: linear-gradient(120deg, #71f4b5, #37c98c);
+}
+
+.progress-fill.enemy {
+  background: linear-gradient(120deg, #ff8a88, #ff4d5d);
+}
+
+.currency {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(80px, 1fr));
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.currency-label {
+  display: block;
+  color: #8fa2c6;
+  font-size: 0.75rem;
+}
+
+.currency-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.item-value {
+  text-align: right;
+  min-width: 120px;
+}
+
+.item-hint {
+  font-size: 0.75rem;
+  color: #7d90b8;
+}
+
+.actions .list {
+  gap: 0.75rem;
+}
+
+.action-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(21, 30, 47, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
+.action-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.toggle {
+  background: rgba(69, 85, 110, 0.4);
+  color: #e6e9f2;
+  border: 1px solid rgba(121, 145, 180, 0.4);
+  padding: 0.4rem 1.1rem;
+  border-radius: 12px;
+}
+
+.toggle.active {
+  background: linear-gradient(120deg, #74d2ff, #6ff2c5);
+  color: #0b111b;
+}
+
+.action-hint {
+  font-size: 0.75rem;
+  color: #8fa2c6;
+}
+
+.combat-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.zone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.zone-card {
+  border-radius: 14px;
+  padding: 0.75rem;
+  text-align: left;
+  background: rgba(21, 30, 47, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.zone-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 197, 102, 0.6);
+}
+
+.zone-card.selected {
+  border-color: rgba(116, 210, 255, 0.9);
+  box-shadow: 0 10px 18px rgba(116, 210, 255, 0.2);
+}
+
+.zone-level {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #9fb0d3;
+}
+
+.enemy-card {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(21, 30, 47, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.enemy-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.enemy-hp .value {
+  font-size: 1.1rem;
+}
+
+.reward-hint {
+  font-size: 0.85rem;
+  color: #9fb0d3;
+}
+
+@media (max-width: 720px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-actions {
+    align-items: flex-start;
+  }
+
+  .list-item,
+  .action-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .item-value,
+  .action-controls {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .top-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+  }
+
+  .hud {
+    align-items: flex-start;
+  }
+
+  .hud-item.wide {
+    min-width: 100%;
+  }
+}
