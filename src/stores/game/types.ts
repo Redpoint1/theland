@@ -1,0 +1,129 @@
+export type StatKey = 'Strength' | 'Agility' | 'Vitality' | 'Spirit' | 'Intelligence'
+export type SkillKey = 'Combat' | 'Survival' | 'Harvesting' | 'Crafting' | 'Arcana'
+export type ProfessionKey = 'Mining' | 'Herbalism' | 'Smelting' | 'Alchemy'
+
+export interface Stat {
+  name: StatKey
+  value: number
+  exp: number
+  expToNext: number
+  description: string
+}
+
+export interface Skill {
+  name: SkillKey
+  level: number
+  exp: number
+  expToNext: number
+  description: string
+}
+
+export interface Profession {
+  name: ProfessionKey
+  level: number
+  exp: number
+  expToNext: number
+  description: string
+  bonusLabel: string
+  bonusPerLevel: number
+}
+
+export interface ProfessionAction {
+  id: string
+  profession: ProfessionKey
+  name: string
+  description: string
+  requiredLevel: number
+  active: boolean
+  expGain: number
+  rewards: Array<{ itemId: string; amount: number }>
+}
+
+export interface ActionGain {
+  exp?: number
+  stats?: Partial<Record<StatKey, number>>
+  skills?: Partial<Record<SkillKey, number>>
+  currency?: Partial<{ copper: number; silver: number; gold: number }>
+}
+
+export interface ActionItem {
+  id: string
+  name: string
+  description: string
+  active: boolean
+  gains: ActionGain
+}
+
+export interface EnemyType {
+  id: string
+  name: string
+  powerFactor: number
+  hpFactor: number
+  rewardFactor: number
+}
+
+export type ItemQuality = 'Common' | 'Uncommon' | 'Rare' | 'Epic'
+export type ItemType = 'Equip' | 'Resource' | 'Consumable' | 'Quest'
+
+export interface ItemDef {
+  id: string
+  name: string
+  quality: ItemQuality
+  type: ItemType
+  subtype: string
+  description: string
+  maxStack: number
+  priceCopper: number
+}
+
+export interface InventorySlot {
+  id: number
+  itemId?: string
+  quantity: number
+}
+
+export type CombatLogType = 'combat' | 'damage' | 'kill' | 'rest' | 'system'
+export type ProfessionLogType = 'action' | 'reward' | 'system'
+export type ActionLogType = 'action' | 'reward' | 'system'
+
+export interface CombatLogEntry {
+  id: number
+  timestamp: number
+  type: CombatLogType
+  message: string
+}
+
+export interface ProfessionLogEntry {
+  id: number
+  timestamp: number
+  type: ProfessionLogType
+  message: string
+}
+
+export interface ActionLogEntry {
+  id: number
+  timestamp: number
+  type: ActionLogType
+  message: string
+}
+
+export interface Zone {
+  id: string
+  name: string
+  description: string
+  levelMin: number
+  levelMax: number
+  basePower: number
+  baseRewards: {
+    exp: number
+    copper: number
+    skillExp: number
+    statExp: number
+  }
+  enemies: [EnemyType, ...EnemyType[]]
+}
+
+export interface SeedItem {
+  itemId: string
+  amount: number
+}
