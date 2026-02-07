@@ -31,7 +31,7 @@ const professionProgressValue = computed(() =>
   professionActionJustCompleted.value ? actionDurationMs : professionActionProgress.value,
 )
 
-const logEntries = computed(() => professionLogs.value.toReversed())
+const logEntries = computed(() => professionLogs.value.slice().reverse())
 
 const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
 </script>

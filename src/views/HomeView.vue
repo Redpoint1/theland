@@ -57,7 +57,7 @@ const idleProgressValue = computed(() =>
   idleActionJustCompleted.value ? actionDurationMs : idleActionProgress.value,
 )
 
-const actionLogEntries = computed(() => actionLogs.value.toReversed())
+const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
 
 </script>
 

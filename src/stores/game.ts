@@ -114,7 +114,7 @@ export const useGameStore = defineStore('game', () => {
     let remaining = amount
     for (let i = inventory.length - 1; i >= 0; i -= 1) {
       const slot = inventory[i]
-      if (slot.itemId !== itemId) continue
+      if (!slot || slot.itemId !== itemId) continue
       const take = Math.min(slot.quantity, remaining)
       slot.quantity -= take
       remaining -= take

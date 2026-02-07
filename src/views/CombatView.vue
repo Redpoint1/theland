@@ -7,7 +7,6 @@ import LogPanel from '../components/LogPanel.vue'
 
 const game = useGameStore()
 const { zones, combat, combatRewards, combatLogs, currentZone, playerHp, maxHp } = storeToRefs(game)
-const { progressPercent } = game
 
 const filters = ref<Record<CombatLogType, boolean>>({
   combat: true,
@@ -26,7 +25,7 @@ const filterOptions: Array<{ id: CombatLogType; label: string }> = [
 ]
 
 const filteredLogs = computed(() =>
-  combatLogs.value.filter((log) => filters.value[log.type]).toReversed(),
+  combatLogs.value.filter((log) => filters.value[log.type]).slice().reverse(),
 )
 </script>
 
