@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore, type CombatLogType } from '../stores/game'
+import ProgressBar from '../components/ProgressBar.vue'
 
 const game = useGameStore()
 const { zones, combat, combatRewards, combatLogs, currentZone, playerHp, maxHp } = storeToRefs(game)
@@ -52,12 +53,7 @@ const filteredLogs = computed(() =>
           </button>
         </div>
         <div class="tick">Health: {{ playerHp }} / {{ maxHp }}</div>
-        <div class="progress">
-          <div
-            class="progress-fill hp"
-            :style="{ width: progressPercent(playerHp, maxHp) + '%' }"
-          ></div>
-        </div>
+        <ProgressBar :value="playerHp" :max="maxHp" variant="hp" />
       </div>
     </header>
 
@@ -96,12 +92,7 @@ const filteredLogs = computed(() =>
           <div class="enemy-hp">
             <div class="label">Enemy Health</div>
             <div class="value">{{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
-            <div class="progress">
-              <div
-                class="progress-fill enemy"
-                :style="{ width: progressPercent(combat.enemyHp, combat.enemyMaxHp) + '%' }"
-              ></div>
-            </div>
+            <ProgressBar :value="combat.enemyHp" :max="combat.enemyMaxHp" variant="enemy" />
           </div>
           <div class="reward-hint">
             Rewards: +{{ combatRewards.exp }} XP, +{{ combatRewards.copper }}c,

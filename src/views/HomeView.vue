@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/game'
+import ProgressBar from '../components/ProgressBar.vue'
 
 const game = useGameStore()
 const {
@@ -19,7 +20,7 @@ const {
   idleActionProgress,
   idleActionJustCompleted,
 } = storeToRefs(game)
-const { progressPercent, actionDurationMs } = game
+const { actionDurationMs } = game
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`
 
@@ -46,11 +47,9 @@ const bonusItems = computed(() => [
   },
 ])
 
-const idleProgressPercent = computed(() => {
-  const max = actionDurationMs
-  const current = idleActionJustCompleted.value ? max : idleActionProgress.value
-  return progressPercent(current, max)
-})
+const idleProgressValue = computed(() =>
+  idleActionJustCompleted.value ? actionDurationMs : idleActionProgress.value,
+)
 
 </script>
 
@@ -84,23 +83,13 @@ const idleProgressPercent = computed(() => {
           <div class="exp-block">
             <div class="label">Experience</div>
             <div class="value">{{ character.exp }} / {{ character.expToNext }}</div>
-            <div class="progress">
-              <div
-                class="progress-fill"
-                :style="{ width: progressPercent(character.exp, character.expToNext) + '%' }"
-              ></div>
-            </div>
+            <ProgressBar :value="character.exp" :max="character.expToNext" />
           </div>
         </div>
         <div class="hp-block">
           <div class="label">Health</div>
           <div class="value">{{ playerHp }} / {{ maxHp }}</div>
-          <div class="progress">
-            <div
-              class="progress-fill hp"
-              :style="{ width: progressPercent(playerHp, maxHp) + '%' }"
-            ></div>
-          </div>
+          <ProgressBar :value="playerHp" :max="maxHp" variant="hp" />
         </div>
         <div class="currency">
           <div>
@@ -128,12 +117,7 @@ const idleProgressPercent = computed(() => {
             </div>
             <div class="item-value">
               <div class="value">{{ stat.value }}</div>
-              <div class="progress thin">
-                <div
-                  class="progress-fill"
-                  :style="{ width: progressPercent(stat.exp, stat.expToNext) + '%' }"
-                ></div>
-              </div>
+              <ProgressBar :value="stat.exp" :max="stat.expToNext" thin />
               <div class="item-hint">{{ stat.exp }} / {{ stat.expToNext }}</div>
             </div>
           </div>
@@ -150,12 +134,7 @@ const idleProgressPercent = computed(() => {
             </div>
             <div class="item-value">
               <div class="value">Lv. {{ skill.level }}</div>
-              <div class="progress thin">
-                <div
-                  class="progress-fill"
-                  :style="{ width: progressPercent(skill.exp, skill.expToNext) + '%' }"
-                ></div>
-              </div>
+              <ProgressBar :value="skill.exp" :max="skill.expToNext" thin />
               <div class="item-hint">{{ skill.exp }} / {{ skill.expToNext }}</div>
             </div>
           </div>
@@ -192,12 +171,12 @@ const idleProgressPercent = computed(() => {
               <div class="action-hint">
                 Completion: 5s · +{{ action.gains.exp ?? 0 }} XP
               </div>
-              <div v-if="action.active" class="progress thin">
-                <div
-                  class="progress-fill"
-                  :style="{ width: idleProgressPercent + '%' }"
-                ></div>
-              </div>
+              <ProgressBar
+                v-if="action.active"
+                :value="idleProgressValue"
+                :max="actionDurationMs"
+                thin
+              />
             </div>
           </div>
         </div>

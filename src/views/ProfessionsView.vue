@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/game'
+import ProgressBar from '../components/ProgressBar.vue'
 
 const game = useGameStore()
 const {
@@ -11,7 +12,7 @@ const {
   professionActionProgress,
   professionActionJustCompleted,
 } = storeToRefs(game)
-const { progressPercent, getItemDef, actionDurationMs } = game
+const { getItemDef, actionDurationMs } = game
 
 const actionsByProfession = computed(() => {
   const map = new Map<string, typeof professionActions.value>()
@@ -24,11 +25,9 @@ const actionsByProfession = computed(() => {
   return map
 })
 
-const professionProgressPercent = computed(() => {
-  const max = actionDurationMs
-  const current = professionActionJustCompleted.value ? max : professionActionProgress.value
-  return progressPercent(current, max)
-})
+const professionProgressValue = computed(() =>
+  professionActionJustCompleted.value ? actionDurationMs : professionActionProgress.value,
+)
 </script>
 
 <template>
@@ -63,12 +62,7 @@ const professionProgressPercent = computed(() => {
         <div class="exp-block">
           <div class="label">Experience</div>
           <div class="value">{{ profession.exp }} / {{ profession.expToNext }}</div>
-          <div class="progress">
-            <div
-              class="progress-fill"
-              :style="{ width: progressPercent(profession.exp, profession.expToNext) + '%' }"
-            ></div>
-          </div>
+          <ProgressBar :value="profession.exp" :max="profession.expToNext" />
         </div>
 
         <div class="profession-actions">
@@ -92,12 +86,12 @@ const professionProgressPercent = computed(() => {
                   {{ getItemDef(reward.itemId)?.name ?? reward.itemId }} x{{ reward.amount }}
                 </span>
               </div>
-              <div v-if="action.active" class="progress thin">
-                <div
-                  class="progress-fill"
-                  :style="{ width: professionProgressPercent + '%' }"
-                ></div>
-              </div>
+              <ProgressBar
+                v-if="action.active"
+                :value="professionProgressValue"
+                :max="actionDurationMs"
+                thin
+              />
             </div>
             <button
               class="toggle"
