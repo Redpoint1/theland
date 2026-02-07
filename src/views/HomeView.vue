@@ -1,11 +1,48 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/game'
 
 const game = useGameStore()
-const { tickMs, paused, character, currency, playerHp, maxHp, statList, skillList, actions, combat } =
-  storeToRefs(game)
+const {
+  tickMs,
+  paused,
+  character,
+  currency,
+  playerHp,
+  maxHp,
+  statList,
+  skillList,
+  actions,
+  combat,
+  skillBonuses,
+} = storeToRefs(game)
 const { progressPercent } = game
+
+const formatPercent = (value: number) => `${Math.round(value * 100)}%`
+
+const bonusItems = computed(() => [
+  {
+    label: 'Combat damage bonus',
+    value: formatPercent(skillBonuses.value.combatDamageMultiplier - 1),
+  },
+  {
+    label: 'Damage reduction',
+    value: formatPercent(skillBonuses.value.combatDamageReduction),
+  },
+  {
+    label: 'Regen bonus',
+    value: formatPercent(skillBonuses.value.regenMultiplier - 1),
+  },
+  {
+    label: 'XP bonus',
+    value: formatPercent(skillBonuses.value.expMultiplier - 1),
+  },
+  {
+    label: 'Currency bonus',
+    value: formatPercent(skillBonuses.value.currencyMultiplier - 1),
+  },
+])
 </script>
 
 <template>
@@ -112,6 +149,16 @@ const { progressPercent } = game
               </div>
               <div class="item-hint">{{ skill.exp }} / {{ skill.expToNext }}</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Skill Bonuses</h2>
+        <div class="list">
+          <div v-for="bonus in bonusItems" :key="bonus.label" class="bonus-item">
+            <div class="item-title">{{ bonus.label }}</div>
+            <div class="bonus-value">{{ bonus.value }}</div>
           </div>
         </div>
       </div>
