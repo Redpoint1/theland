@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore, type CombatLogType } from '../stores/game'
 import ProgressBar from '../components/ProgressBar.vue'
+import LogPanel from '../components/LogPanel.vue'
 
 const game = useGameStore()
 const { zones, combat, combatRewards, combatLogs, currentZone, playerHp, maxHp } = storeToRefs(game)
@@ -101,31 +102,21 @@ const filteredLogs = computed(() =>
         </div>
       </div>
 
-      <div class="panel combat-log">
-        <div class="combat-header">
-          <div>
-            <h2>Combat Log</h2>
-            <div class="item-desc">Latest 1000 events retained.</div>
+      <LogPanel
+        title="Combat Log"
+        subtitle="Latest 1000 events retained."
+        :entries="filteredLogs"
+        :on-clear="game.clearCombatLogs"
+      >
+        <template #filters>
+          <div class="log-filters">
+            <label v-for="option in filterOptions" :key="option.id" class="filter-pill">
+              <input v-model="filters[option.id]" type="checkbox" />
+              <span>{{ option.label }}</span>
+            </label>
           </div>
-          <button class="ghost" @click="game.clearCombatLogs">Clear Log</button>
-        </div>
-
-        <div class="log-filters">
-          <label v-for="option in filterOptions" :key="option.id" class="filter-pill">
-            <input v-model="filters[option.id]" type="checkbox" />
-            <span>{{ option.label }}</span>
-          </label>
-        </div>
-
-        <div class="log-list">
-          <div v-if="!filteredLogs.length" class="log-empty">No entries yet.</div>
-          <div v-for="log in filteredLogs" :key="log.id" class="log-row">
-            <span class="log-time">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
-            <span class="log-type">{{ log.type }}</span>
-            <span class="log-message">{{ log.message }}</span>
-          </div>
-        </div>
-      </div>
+        </template>
+      </LogPanel>
     </section>
   </main>
 </template>

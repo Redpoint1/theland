@@ -7,6 +7,7 @@ import StatCard from '../components/StatCard.vue'
 import SkillCard from '../components/SkillCard.vue'
 import SkillBonusItem from '../components/SkillBonusItem.vue'
 import IdleActionCard from '../components/IdleActionCard.vue'
+import LogPanel from '../components/LogPanel.vue'
 
 const game = useGameStore()
 const {
@@ -23,6 +24,7 @@ const {
   skillBonuses,
   idleActionProgress,
   idleActionJustCompleted,
+  actionLogs,
 } = storeToRefs(game)
 const { actionDurationMs } = game
 
@@ -54,6 +56,8 @@ const bonusItems = computed(() => [
 const idleProgressValue = computed(() =>
   idleActionJustCompleted.value ? actionDurationMs : idleActionProgress.value,
 )
+
+const actionLogEntries = computed(() => actionLogs.value.toReversed())
 
 </script>
 
@@ -151,6 +155,13 @@ const idleProgressValue = computed(() =>
           />
         </div>
       </div>
+
+      <LogPanel
+        title="Action Log"
+        subtitle="Latest 500 events retained."
+        :entries="actionLogEntries"
+        :on-clear="game.clearActionLogs"
+      />
 
     </section>
   </main>

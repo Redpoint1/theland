@@ -86,11 +86,27 @@ export interface InventorySlot {
 }
 
 export type CombatLogType = 'combat' | 'damage' | 'kill' | 'rest' | 'system'
+export type ProfessionLogType = 'action' | 'reward' | 'system'
+export type ActionLogType = 'action' | 'reward' | 'system'
 
 export interface CombatLogEntry {
   id: number
   timestamp: number
   type: CombatLogType
+  message: string
+}
+
+export interface ProfessionLogEntry {
+  id: number
+  timestamp: number
+  type: ProfessionLogType
+  message: string
+}
+
+export interface ActionLogEntry {
+  id: number
+  timestamp: number
+  type: ActionLogType
   message: string
 }
 
@@ -169,35 +185,35 @@ export const useGameStore = defineStore('game', () => {
   const skills = reactive<Record<SkillKey, Skill>>({
     Combat: {
       name: 'Combat',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 60,
       description: 'Weapon handling and battle instincts.',
     },
     Survival: {
       name: 'Survival',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 55,
       description: 'Tracking, foraging, fieldcraft.',
     },
     Harvesting: {
       name: 'Harvesting',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 50,
       description: 'Gathering resources and loot.',
     },
     Crafting: {
       name: 'Crafting',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 65,
       description: 'Making gear and supplies.',
     },
     Arcana: {
       name: 'Arcana',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 70,
       description: 'Mana control and spellwork.',
@@ -207,7 +223,7 @@ export const useGameStore = defineStore('game', () => {
   const professions = reactive<Record<ProfessionKey, Profession>>({
     Mining: {
       name: 'Mining',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 50,
       description: 'Extract ore and crystals from the Land.',
@@ -216,7 +232,7 @@ export const useGameStore = defineStore('game', () => {
     },
     Herbalism: {
       name: 'Herbalism',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 50,
       description: 'Gather rare herbs and reagents.',
@@ -225,7 +241,7 @@ export const useGameStore = defineStore('game', () => {
     },
     Smelting: {
       name: 'Smelting',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 60,
       description: 'Refine ores into usable ingots.',
@@ -234,7 +250,7 @@ export const useGameStore = defineStore('game', () => {
     },
     Alchemy: {
       name: 'Alchemy',
-      level: 1,
+      level: 0,
       exp: 0,
       expToNext: 60,
       description: 'Brew tonics and mana infusions.',
@@ -249,7 +265,7 @@ export const useGameStore = defineStore('game', () => {
       profession: 'Mining',
       name: 'Scrape the Vein',
       description: 'Chip away at exposed ore.',
-      requiredLevel: 1,
+      requiredLevel: 0,
       active: false,
       expGain: 4,
       rewards: [{ itemId: 'iron-ore', amount: 2 }],
@@ -272,7 +288,7 @@ export const useGameStore = defineStore('game', () => {
       profession: 'Herbalism',
       name: 'Forage Mist Herbs',
       description: 'Collect common herbs near the village.',
-      requiredLevel: 1,
+      requiredLevel: 0,
       active: false,
       expGain: 4,
       rewards: [{ itemId: 'mist-herb', amount: 3 }],
@@ -295,7 +311,7 @@ export const useGameStore = defineStore('game', () => {
       profession: 'Smelting',
       name: 'Smelt Iron',
       description: 'Refine ore into ingots.',
-      requiredLevel: 1,
+      requiredLevel: 0,
       active: false,
       expGain: 5,
       rewards: [{ itemId: 'iron-ingot', amount: 1 }],
@@ -315,7 +331,7 @@ export const useGameStore = defineStore('game', () => {
       profession: 'Alchemy',
       name: 'Brew Minor Tonic',
       description: 'Basic restorative mixture.',
-      requiredLevel: 1,
+      requiredLevel: 0,
       active: false,
       expGain: 5,
       rewards: [{ itemId: 'minor-elixir', amount: 1 }],
@@ -847,18 +863,13 @@ export const useGameStore = defineStore('game', () => {
   const professionList = computed(() => Object.values(professions))
 
   const skillBonuses = computed(() => {
-    const combatLevel = skills.Combat.level
-    const survivalLevel = skills.Survival.level
-    const arcanaLevel = skills.Arcana.level
-    const craftingLevel = skills.Crafting.level
-    const harvestingLevel = skills.Harvesting.level
-
     return {
-      combatDamageMultiplier: 1 + combatLevel * 0.05,
-      combatDamageReduction: Math.min(0.8, combatLevel * 0.05),
-      regenMultiplier: 1 + survivalLevel * 0.02,
-      expMultiplier: 1 + arcanaLevel * 0.02,
-      currencyMultiplier: 1 + craftingLevel * 0.01 + harvestingLevel * 0.01,
+      combatDamageMultiplier: 1 + skills.Combat.level * 0.05,
+      combatDamageReduction: Math.min(0.8, skills.Combat.level * 0.05),
+      regenMultiplier: 1 + skills.Survival.level * 0.02,
+      expMultiplier: 1 + skills.Arcana.level * 0.02,
+      currencyMultiplier:
+        1 + skills.Crafting.level * 0.01 + skills.Harvesting.level * 0.01,
     }
   })
 
@@ -887,6 +898,12 @@ export const useGameStore = defineStore('game', () => {
   const combatLogs = ref<CombatLogEntry[]>([])
   let combatLogId = 0
 
+  const professionLogs = ref<ProfessionLogEntry[]>([])
+  let professionLogId = 0
+
+  const actionLogs = ref<ActionLogEntry[]>([])
+  let actionLogId = 0
+
   const addCombatLog = (type: CombatLogType, message: string) => {
     combatLogs.value.push({
       id: (combatLogId += 1),
@@ -900,8 +917,42 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  const addProfessionLog = (type: ProfessionLogType, message: string) => {
+    professionLogs.value.push({
+      id: (professionLogId += 1),
+      timestamp: Date.now(),
+      type,
+      message,
+    })
+
+    if (professionLogs.value.length > 500) {
+      professionLogs.value.splice(0, professionLogs.value.length - 500)
+    }
+  }
+
+  const addActionLog = (type: ActionLogType, message: string) => {
+    actionLogs.value.push({
+      id: (actionLogId += 1),
+      timestamp: Date.now(),
+      type,
+      message,
+    })
+
+    if (actionLogs.value.length > 500) {
+      actionLogs.value.splice(0, actionLogs.value.length - 500)
+    }
+  }
+
   const clearCombatLogs = () => {
     combatLogs.value = []
+  }
+
+  const clearProfessionLogs = () => {
+    professionLogs.value = []
+  }
+
+  const clearActionLogs = () => {
+    actionLogs.value = []
   }
 
   const currentZone = computed((): Zone => zones.find((zone) => zone.id === combat.zoneId) ?? defaultZone)
@@ -1075,18 +1126,61 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  const formatActionRewards = (action: ActionItem) => {
+    const summary: string[] = []
+
+    if (action.gains.exp) {
+      const expGain = Math.floor(action.gains.exp * skillBonuses.value.expMultiplier)
+      summary.push(`+${expGain} XP`)
+    }
+
+    if (action.gains.stats) {
+      Object.entries(action.gains.stats).forEach(([key, amount]) => {
+        if ((amount ?? 0) > 0) summary.push(`+${amount} ${key} XP`)
+      })
+    }
+
+    if (action.gains.skills) {
+      Object.entries(action.gains.skills).forEach(([key, amount]) => {
+        if ((amount ?? 0) > 0) summary.push(`+${amount} ${key} XP`)
+      })
+    }
+
+    if (action.gains.currency) {
+      const bonus = skillBonuses.value.currencyMultiplier
+      const gold = Math.floor((action.gains.currency.gold ?? 0) * bonus)
+      const silver = Math.floor((action.gains.currency.silver ?? 0) * bonus)
+      const copper = Math.floor((action.gains.currency.copper ?? 0) * bonus)
+      if (gold) summary.push(`+${gold}g`)
+      if (silver) summary.push(`+${silver}s`)
+      if (copper) summary.push(`+${copper}c`)
+    }
+
+    return summary.length ? summary.join(', ') : 'no rewards'
+  }
+
   const toggleAction = (action: ActionItem) => {
-    if (combat.active || combat.resting) return
+    if (combat.active || combat.resting) {
+      addActionLog('system', 'Cannot start idle actions during combat or rest.')
+      return
+    }
+    const previousActive = actions.find((item) => item.active)
     actions.forEach((item) => {
       item.active = item.id === action.id ? !action.active : false
     })
     idleActionProgress.value = 0
     idleActionJustCompleted.value = false
     const activated = actions.find((item) => item.id === action.id)?.active
+    if (previousActive && previousActive.id !== action.id) {
+      addActionLog('action', `Stopped ${previousActive.name}.`)
+    }
     if (activated) {
+      addActionLog('action', `Started ${action.name}.`)
       combat.active = false
       combat.resting = false
       deactivateProfessionActions()
+    } else {
+      addActionLog('action', `Stopped ${action.name}.`)
     }
   }
 
@@ -1161,23 +1255,37 @@ export const useGameStore = defineStore('game', () => {
     if (idleActionProgress.value >= actionDurationMs) {
       idleActionProgress.value = actionDurationMs
       applyIdleGains(active)
+      addActionLog('reward', `Completed ${active.name}. ${formatActionRewards(active)}.`)
       idleActionJustCompleted.value = true
     }
   }
 
   const toggleProfessionAction = (action: ProfessionAction) => {
     const profession = professions[action.profession]
-    if (profession.level < action.requiredLevel) return
+    if (profession.level < action.requiredLevel) {
+      addProfessionLog(
+        'system',
+        `${action.name} requires ${action.profession} level ${action.requiredLevel}.`,
+      )
+      return
+    }
+    const previousActive = professionActions.find((item) => item.active)
     const nextActive = !action.active
     professionActions.forEach((item) => {
       item.active = item.id === action.id ? nextActive : false
     })
     professionActionProgress.value = 0
     professionActionJustCompleted.value = false
+    if (previousActive && previousActive.id !== action.id) {
+      addProfessionLog('action', `Stopped ${previousActive.name}.`)
+    }
     if (nextActive) {
+      addProfessionLog('action', `Started ${action.name}.`)
       combat.active = false
       combat.resting = false
       deactivateActions()
+    } else {
+      addProfessionLog('action', `Stopped ${action.name}.`)
     }
   }
 
@@ -1207,9 +1315,25 @@ export const useGameStore = defineStore('game', () => {
       professionActionProgress.value = actionDurationMs
       const bonus = professionBonuses.value[active.profession]
       addProfessionExp(active.profession, active.expGain)
+      const rewardSummary: string[] = []
       active.rewards.forEach((reward) => {
-        addItem(reward.itemId, Math.max(1, Math.floor(reward.amount * bonus)))
+        const boosted = reward.amount * bonus
+        const baseAmount = Math.floor(boosted)
+        const remainder = boosted - baseAmount
+        const extraItemChance = bonus - 1
+        const extra = remainder > 0 && Math.random() < extraItemChance ? 1 : 0
+        const total = baseAmount + extra
+        if (total > 0) {
+          addItem(reward.itemId, total)
+          const name = getItemDef(reward.itemId)?.name ?? reward.itemId
+          rewardSummary.push(`${name} x${total}`)
+        }
       })
+      const rewardsText = rewardSummary.length ? rewardSummary.join(', ') : 'no items'
+      addProfessionLog(
+        'reward',
+        `Completed ${active.name}. +${active.expGain} ${active.profession} XP, ${rewardsText}.`,
+      )
       professionActionJustCompleted.value = true
     }
   }
@@ -1285,6 +1409,8 @@ export const useGameStore = defineStore('game', () => {
     combat,
     combatRewards,
     combatLogs,
+    professionLogs,
+    actionLogs,
     playerHp,
     maxHp,
     statList,
@@ -1300,6 +1426,10 @@ export const useGameStore = defineStore('game', () => {
     setZone,
     addCombatLog,
     clearCombatLogs,
+    addProfessionLog,
+    clearProfessionLogs,
+    addActionLog,
+    clearActionLogs,
     startTicker,
     stopTicker,
   }

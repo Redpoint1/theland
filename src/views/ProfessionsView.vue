@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/game'
 import ProfessionCard from '../components/ProfessionCard.vue'
+import LogPanel from '../components/LogPanel.vue'
 
 const game = useGameStore()
 const {
@@ -11,6 +12,7 @@ const {
   professionBonuses,
   professionActionProgress,
   professionActionJustCompleted,
+  professionLogs,
 } = storeToRefs(game)
 const { getItemDef, actionDurationMs } = game
 
@@ -28,6 +30,8 @@ const actionsByProfession = computed(() => {
 const professionProgressValue = computed(() =>
   professionActionJustCompleted.value ? actionDurationMs : professionActionProgress.value,
 )
+
+const logEntries = computed(() => professionLogs.value.toReversed())
 
 const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
 </script>
@@ -56,6 +60,13 @@ const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
         :progress-value="professionProgressValue"
         :get-item-name="getItemName"
         :on-toggle="game.toggleProfessionAction"
+      />
+
+      <LogPanel
+        title="Profession Log"
+        subtitle="Latest 500 events retained."
+        :entries="logEntries"
+        :on-clear="game.clearProfessionLogs"
       />
     </section>
   </main>
