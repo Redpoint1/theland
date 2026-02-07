@@ -107,6 +107,25 @@ export const useGameStore = defineStore('game', () => {
     quantity: 0,
   })
 
+  const getItemQuantity = (itemId: string) =>
+    inventory.reduce((total, slot) => (slot.itemId === itemId ? total + slot.quantity : total), 0)
+
+  const removeItem = (itemId: string, amount: number) => {
+    let remaining = amount
+    for (let i = inventory.length - 1; i >= 0; i -= 1) {
+      const slot = inventory[i]
+      if (slot.itemId !== itemId) continue
+      const take = Math.min(slot.quantity, remaining)
+      slot.quantity -= take
+      remaining -= take
+      if (slot.quantity <= 0) {
+        inventory.splice(i, 1)
+      }
+      if (remaining <= 0) break
+    }
+    return remaining <= 0
+  }
+
   const addItem = (itemId: string, amount: number) => {
     const def = getItemDef(itemId)
     if (!def) return
@@ -470,6 +489,18 @@ export const useGameStore = defineStore('game', () => {
     return summary.length ? summary.join(', ') : 'no rewards'
   }
 
+  const getMissingInputs = (action: ProfessionAction) => {
+    if (!action.inputs || action.inputs.length === 0) return []
+    return action.inputs
+      .map((input) => {
+        const available = getItemQuantity(input.itemId)
+        if (available >= input.amount) return null
+        const name = getItemDef(input.itemId)?.name ?? input.itemId
+        return `${name} x${input.amount - available}`
+      })
+      .filter((entry): entry is string => !!entry)
+  }
+
   const toggleAction = (action: ActionItem) => {
     if (combat.active || combat.resting) {
       addActionLog('system', 'Cannot start idle actions during combat or rest.')
@@ -580,6 +611,14 @@ export const useGameStore = defineStore('game', () => {
       )
       return
     }
+    const missingInputs = getMissingInputs(action)
+    if (missingInputs.length > 0) {
+      addProfessionLog(
+        'system',
+        `Cannot start ${action.name} - missing ${missingInputs.join(', ')}.`,
+      )
+      return
+    }
     const previousActive = professionActions.find((item) => item.active)
     const nextActive = !action.active
     professionActions.forEach((item) => {
@@ -617,6 +656,17 @@ export const useGameStore = defineStore('game', () => {
       professionActionJustCompleted.value = false
       return
     }
+    const missingInputs = getMissingInputs(active)
+    if (missingInputs.length > 0) {
+      active.active = false
+      professionActionProgress.value = 0
+      professionActionJustCompleted.value = false
+      addProfessionLog(
+        'system',
+        `Stopped ${active.name} - missing ${missingInputs.join(', ')}.`,
+      )
+      return
+    }
     if (professionActionJustCompleted.value) {
       professionActionJustCompleted.value = false
       professionActionProgress.value = 0
@@ -624,6 +674,24 @@ export const useGameStore = defineStore('game', () => {
     professionActionProgress.value += tickMs
     if (professionActionProgress.value >= actionDurationMs) {
       professionActionProgress.value = actionDurationMs
+      if (active.inputs && active.inputs.length > 0) {
+        const hasAllInputs = active.inputs.every(
+          (input) => getItemQuantity(input.itemId) >= input.amount,
+        )
+        if (!hasAllInputs) {
+          active.active = false
+          professionActionProgress.value = 0
+          professionActionJustCompleted.value = false
+          addProfessionLog(
+            'system',
+            `Stopped ${active.name} - missing required inputs.`,
+          )
+          return
+        }
+        active.inputs.forEach((input) => {
+          removeItem(input.itemId, input.amount)
+        })
+      }
       const bonus = professionBonuses.value[active.profession]
       addProfessionExp(active.profession, active.expGain)
       const rewardSummary: string[] = []
@@ -714,6 +782,8 @@ export const useGameStore = defineStore('game', () => {
     usedInventorySlots,
     maxInventorySlots,
     addItem,
+    removeItem,
+    getItemQuantity,
     sellFromSlot,
     getItemDef,
     zones,

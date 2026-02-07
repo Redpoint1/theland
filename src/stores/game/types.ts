@@ -36,6 +36,7 @@ export interface ProfessionAction {
   requiredLevel: number
   active: boolean
   expGain: number
+  inputs?: Array<{ itemId: string; amount: number }>
   rewards: Array<{ itemId: string; amount: number }>
 }
 

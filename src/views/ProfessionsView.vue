@@ -14,7 +14,7 @@ const {
   professionActionJustCompleted,
   professionLogs,
 } = storeToRefs(game)
-const { getItemDef, actionDurationMs } = game
+const { getItemDef, getItemQuantity, actionDurationMs } = game
 
 const actionsByProfession = computed(() => {
   const map = new Map<string, typeof professionActions.value>()
@@ -59,6 +59,7 @@ const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
         :action-duration-ms="actionDurationMs"
         :progress-value="professionProgressValue"
         :get-item-name="getItemName"
+        :get-item-quantity="getItemQuantity"
         :on-toggle="game.toggleProfessionAction"
       />
 

@@ -182,6 +182,7 @@ export const createProfessionActions = (): ProfessionAction[] => [
     requiredLevel: 0,
     active: false,
     expGain: 5,
+    inputs: [{ itemId: 'iron-ore', amount: 3 }],
     rewards: [{ itemId: 'iron-ingot', amount: 1 }],
   },
   {
@@ -192,6 +193,10 @@ export const createProfessionActions = (): ProfessionAction[] => [
     requiredLevel: 7,
     active: false,
     expGain: 8,
+    inputs: [
+      { itemId: 'iron-ore', amount: 6 },
+      { itemId: 'mana-crystal', amount: 1 },
+    ],
     rewards: [{ itemId: 'iron-ingot', amount: 2 }],
   },
   {
@@ -202,6 +207,7 @@ export const createProfessionActions = (): ProfessionAction[] => [
     requiredLevel: 0,
     active: false,
     expGain: 5,
+    inputs: [{ itemId: 'mist-herb', amount: 3 }],
     rewards: [{ itemId: 'minor-elixir', amount: 1 }],
   },
   {
@@ -212,6 +218,10 @@ export const createProfessionActions = (): ProfessionAction[] => [
     requiredLevel: 8,
     active: false,
     expGain: 9,
+    inputs: [
+      { itemId: 'mist-herb', amount: 6 },
+      { itemId: 'mana-crystal', amount: 1 },
+    ],
     rewards: [
       { itemId: 'minor-elixir', amount: 2 },
       { itemId: 'mana-crystal', amount: 1 },

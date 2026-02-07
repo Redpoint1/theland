@@ -10,6 +10,7 @@ const props = defineProps<{
   actionDurationMs: number
   progressValue: number
   getItemName: (itemId: string) => string
+  getItemQuantity: (itemId: string) => number
   onToggle: (action: ProfessionAction) => void
 }>()
 </script>
@@ -45,6 +46,7 @@ const props = defineProps<{
         :progress-value="props.progressValue"
         :action-duration-ms="props.actionDurationMs"
         :get-item-name="props.getItemName"
+        :get-item-quantity="props.getItemQuantity"
         :on-toggle="props.onToggle"
       />
     </div>
