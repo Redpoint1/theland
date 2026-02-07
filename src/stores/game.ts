@@ -111,6 +111,7 @@ export interface Zone {
 }
 
 const tickMs = 1000
+const actionDurationMs = 5000
 
 export const useGameStore = defineStore('game', () => {
   const paused = ref(false)
@@ -333,6 +334,11 @@ export const useGameStore = defineStore('game', () => {
       ],
     },
   ])
+
+  const idleActionProgress = ref(0)
+  const professionActionProgress = ref(0)
+  const idleActionJustCompleted = ref(false)
+  const professionActionJustCompleted = ref(false)
 
   const actions = reactive<ActionItem[]>([
     {
@@ -973,6 +979,25 @@ export const useGameStore = defineStore('game', () => {
     professionActions.some((action) => action.active),
   )
 
+  const applyIdleGains = (action: ActionItem) => {
+    if (action.gains.exp) {
+      addCharacterExp(action.gains.exp)
+    }
+    if (action.gains.stats) {
+      Object.entries(action.gains.stats).forEach(([key, amount]) => {
+        addStatExp(key as StatKey, amount ?? 0)
+      })
+    }
+    if (action.gains.skills) {
+      Object.entries(action.gains.skills).forEach(([key, amount]) => {
+        addSkillExp(key as SkillKey, amount ?? 0)
+      })
+    }
+    if (action.gains.currency) {
+      addCurrency(action.gains.currency)
+    }
+  }
+
   const randomInt = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min
 
@@ -1051,10 +1076,18 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const toggleAction = (action: ActionItem) => {
-    if (combat.active || combat.resting || isProfessionActionActive.value) return
+    if (combat.active || combat.resting) return
     actions.forEach((item) => {
       item.active = item.id === action.id ? !action.active : false
     })
+    idleActionProgress.value = 0
+    idleActionJustCompleted.value = false
+    const activated = actions.find((item) => item.id === action.id)?.active
+    if (activated) {
+      combat.active = false
+      combat.resting = false
+      deactivateProfessionActions()
+    }
   }
 
   const runCombatTick = () => {
@@ -1113,26 +1146,23 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const runIdleActions = () => {
-    if (combat.active || combat.resting || isProfessionActionActive.value) return
-    actions.forEach((action) => {
-      if (!action.active) return
-      if (action.gains.exp) {
-        addCharacterExp(action.gains.exp)
-      }
-      if (action.gains.stats) {
-        Object.entries(action.gains.stats).forEach(([key, amount]) => {
-          addStatExp(key as StatKey, amount ?? 0)
-        })
-      }
-      if (action.gains.skills) {
-        Object.entries(action.gains.skills).forEach(([key, amount]) => {
-          addSkillExp(key as SkillKey, amount ?? 0)
-        })
-      }
-      if (action.gains.currency) {
-        addCurrency(action.gains.currency)
-      }
-    })
+    if (combat.active || combat.resting) return
+    const active = actions.find((action) => action.active)
+    if (!active) {
+      idleActionProgress.value = 0
+      idleActionJustCompleted.value = false
+      return
+    }
+    if (idleActionJustCompleted.value) {
+      idleActionJustCompleted.value = false
+      idleActionProgress.value = 0
+    }
+    idleActionProgress.value += tickMs
+    if (idleActionProgress.value >= actionDurationMs) {
+      idleActionProgress.value = actionDurationMs
+      applyIdleGains(active)
+      idleActionJustCompleted.value = true
+    }
   }
 
   const toggleProfessionAction = (action: ProfessionAction) => {
@@ -1142,6 +1172,8 @@ export const useGameStore = defineStore('game', () => {
     professionActions.forEach((item) => {
       item.active = item.id === action.id ? nextActive : false
     })
+    professionActionProgress.value = 0
+    professionActionJustCompleted.value = false
     if (nextActive) {
       combat.active = false
       combat.resting = false
@@ -1161,12 +1193,25 @@ export const useGameStore = defineStore('game', () => {
   const runProfessionActions = () => {
     if (combat.active || combat.resting || isIdleActionActive.value) return
     const active = professionActions.find((action) => action.active)
-    if (!active) return
-    const bonus = professionBonuses.value[active.profession]
-    addProfessionExp(active.profession, active.expGain)
-    active.rewards.forEach((reward) => {
-      addItem(reward.itemId, Math.max(1, Math.floor(reward.amount * bonus)))
-    })
+    if (!active) {
+      professionActionProgress.value = 0
+      professionActionJustCompleted.value = false
+      return
+    }
+    if (professionActionJustCompleted.value) {
+      professionActionJustCompleted.value = false
+      professionActionProgress.value = 0
+    }
+    professionActionProgress.value += tickMs
+    if (professionActionProgress.value >= actionDurationMs) {
+      professionActionProgress.value = actionDurationMs
+      const bonus = professionBonuses.value[active.profession]
+      addProfessionExp(active.profession, active.expGain)
+      active.rewards.forEach((reward) => {
+        addItem(reward.itemId, Math.max(1, Math.floor(reward.amount * bonus)))
+      })
+      professionActionJustCompleted.value = true
+    }
   }
 
   const runTick = () => {
@@ -1222,6 +1267,11 @@ export const useGameStore = defineStore('game', () => {
     professionBonuses,
     isIdleActionActive,
     isProfessionActionActive,
+    idleActionProgress,
+    professionActionProgress,
+    idleActionJustCompleted,
+    professionActionJustCompleted,
+    actionDurationMs,
     actions,
     itemDefs,
     inventory,

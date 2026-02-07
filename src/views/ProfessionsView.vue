@@ -4,8 +4,14 @@ import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/game'
 
 const game = useGameStore()
-const { professionList, professionActions, professionBonuses } = storeToRefs(game)
-const { progressPercent, getItemDef } = game
+const {
+  professionList,
+  professionActions,
+  professionBonuses,
+  professionActionProgress,
+  professionActionJustCompleted,
+} = storeToRefs(game)
+const { progressPercent, getItemDef, actionDurationMs } = game
 
 const actionsByProfession = computed(() => {
   const map = new Map<string, typeof professionActions.value>()
@@ -16,6 +22,12 @@ const actionsByProfession = computed(() => {
     map.get(action.profession)?.push(action)
   })
   return map
+})
+
+const professionProgressPercent = computed(() => {
+  const max = actionDurationMs
+  const current = professionActionJustCompleted.value ? max : professionActionProgress.value
+  return progressPercent(current, max)
 })
 </script>
 
@@ -79,6 +91,12 @@ const actionsByProfession = computed(() => {
                 >
                   {{ getItemDef(reward.itemId)?.name ?? reward.itemId }} x{{ reward.amount }}
                 </span>
+              </div>
+              <div v-if="action.active" class="progress thin">
+                <div
+                  class="progress-fill"
+                  :style="{ width: professionProgressPercent + '%' }"
+                ></div>
               </div>
             </div>
             <button

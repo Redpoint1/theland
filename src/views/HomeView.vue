@@ -16,9 +16,10 @@ const {
   actions,
   combat,
   skillBonuses,
-  isProfessionActionActive,
+  idleActionProgress,
+  idleActionJustCompleted,
 } = storeToRefs(game)
-const { progressPercent } = game
+const { progressPercent, actionDurationMs } = game
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`
 
@@ -44,6 +45,12 @@ const bonusItems = computed(() => [
     value: formatPercent(skillBonuses.value.currencyMultiplier - 1),
   },
 ])
+
+const idleProgressPercent = computed(() => {
+  const max = actionDurationMs
+  const current = idleActionJustCompleted.value ? max : idleActionProgress.value
+  return progressPercent(current, max)
+})
 
 </script>
 
@@ -177,13 +184,19 @@ const bonusItems = computed(() => [
               <button
                 class="toggle"
                 :class="{ active: action.active }"
-                :disabled="combat.active || combat.resting || isProfessionActionActive"
+                :disabled="combat.active || combat.resting"
                 @click="game.toggleAction(action)"
               >
                 {{ action.active ? 'Active' : 'Idle' }}
               </button>
               <div class="action-hint">
-                +{{ action.gains.exp ?? 0 }} XP / tick
+                Completion: 5s · +{{ action.gains.exp ?? 0 }} XP
+              </div>
+              <div v-if="action.active" class="progress thin">
+                <div
+                  class="progress-fill"
+                  :style="{ width: idleProgressPercent + '%' }"
+                ></div>
               </div>
             </div>
           </div>

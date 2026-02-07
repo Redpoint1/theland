@@ -606,6 +606,11 @@ button:disabled {
   border: 1px solid rgba(90, 110, 140, 0.3);
 }
 
+.profession-action .progress {
+  width: 100%;
+  margin-top: 0.4rem;
+}
+
 .profession-action.locked {
   opacity: 0.55;
 }
