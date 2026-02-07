@@ -16,6 +16,7 @@ const {
   actions,
   combat,
   skillBonuses,
+  isProfessionActionActive,
 } = storeToRefs(game)
 const { progressPercent } = game
 
@@ -176,7 +177,7 @@ const bonusItems = computed(() => [
               <button
                 class="toggle"
                 :class="{ active: action.active }"
-                :disabled="combat.active"
+                :disabled="combat.active || combat.resting || isProfessionActionActive"
                 @click="game.toggleAction(action)"
               >
                 {{ action.active ? 'Active' : 'Idle' }}

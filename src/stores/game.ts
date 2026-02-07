@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 
 export type StatKey = 'Strength' | 'Agility' | 'Vitality' | 'Spirit' | 'Intelligence'
 export type SkillKey = 'Combat' | 'Survival' | 'Harvesting' | 'Crafting' | 'Arcana'
+export type ProfessionKey = 'Mining' | 'Herbalism' | 'Smelting' | 'Alchemy'
 
 export interface Stat {
   name: StatKey
@@ -18,6 +19,27 @@ export interface Skill {
   exp: number
   expToNext: number
   description: string
+}
+
+export interface Profession {
+  name: ProfessionKey
+  level: number
+  exp: number
+  expToNext: number
+  description: string
+  bonusLabel: string
+  bonusPerLevel: number
+}
+
+export interface ProfessionAction {
+  id: string
+  profession: ProfessionKey
+  name: string
+  description: string
+  requiredLevel: number
+  active: boolean
+  expGain: number
+  rewards: Array<{ itemId: string; amount: number }>
 }
 
 export interface ActionGain {
@@ -181,6 +203,137 @@ export const useGameStore = defineStore('game', () => {
     },
   })
 
+  const professions = reactive<Record<ProfessionKey, Profession>>({
+    Mining: {
+      name: 'Mining',
+      level: 1,
+      exp: 0,
+      expToNext: 50,
+      description: 'Extract ore and crystals from the Land.',
+      bonusLabel: 'Yield bonus',
+      bonusPerLevel: 0.03,
+    },
+    Herbalism: {
+      name: 'Herbalism',
+      level: 1,
+      exp: 0,
+      expToNext: 50,
+      description: 'Gather rare herbs and reagents.',
+      bonusLabel: 'Yield bonus',
+      bonusPerLevel: 0.03,
+    },
+    Smelting: {
+      name: 'Smelting',
+      level: 1,
+      exp: 0,
+      expToNext: 60,
+      description: 'Refine ores into usable ingots.',
+      bonusLabel: 'Output bonus',
+      bonusPerLevel: 0.02,
+    },
+    Alchemy: {
+      name: 'Alchemy',
+      level: 1,
+      exp: 0,
+      expToNext: 60,
+      description: 'Brew tonics and mana infusions.',
+      bonusLabel: 'Potency bonus',
+      bonusPerLevel: 0.02,
+    },
+  })
+
+  const professionActions = reactive<ProfessionAction[]>([
+    {
+      id: 'mine-scrape',
+      profession: 'Mining',
+      name: 'Scrape the Vein',
+      description: 'Chip away at exposed ore.',
+      requiredLevel: 1,
+      active: false,
+      expGain: 4,
+      rewards: [{ itemId: 'iron-ore', amount: 2 }],
+    },
+    {
+      id: 'mine-deep',
+      profession: 'Mining',
+      name: 'Deep Vein',
+      description: 'Push deeper for better ore.',
+      requiredLevel: 6,
+      active: false,
+      expGain: 7,
+      rewards: [
+        { itemId: 'iron-ore', amount: 4 },
+        { itemId: 'mana-crystal', amount: 1 },
+      ],
+    },
+    {
+      id: 'herb-forage',
+      profession: 'Herbalism',
+      name: 'Forage Mist Herbs',
+      description: 'Collect common herbs near the village.',
+      requiredLevel: 1,
+      active: false,
+      expGain: 4,
+      rewards: [{ itemId: 'mist-herb', amount: 3 }],
+    },
+    {
+      id: 'herb-night',
+      profession: 'Herbalism',
+      name: 'Night Bloom Hunt',
+      description: 'Hunt rare blooms at dusk.',
+      requiredLevel: 5,
+      active: false,
+      expGain: 6,
+      rewards: [
+        { itemId: 'mist-herb', amount: 5 },
+        { itemId: 'mana-crystal', amount: 1 },
+      ],
+    },
+    {
+      id: 'smelt-iron',
+      profession: 'Smelting',
+      name: 'Smelt Iron',
+      description: 'Refine ore into ingots.',
+      requiredLevel: 1,
+      active: false,
+      expGain: 5,
+      rewards: [{ itemId: 'iron-ingot', amount: 1 }],
+    },
+    {
+      id: 'smelt-pure',
+      profession: 'Smelting',
+      name: 'Purify Ingots',
+      description: 'Produce higher quality ingots.',
+      requiredLevel: 7,
+      active: false,
+      expGain: 8,
+      rewards: [{ itemId: 'iron-ingot', amount: 2 }],
+    },
+    {
+      id: 'alchemy-tonic',
+      profession: 'Alchemy',
+      name: 'Brew Minor Tonic',
+      description: 'Basic restorative mixture.',
+      requiredLevel: 1,
+      active: false,
+      expGain: 5,
+      rewards: [{ itemId: 'minor-elixir', amount: 1 }],
+    },
+    {
+      id: 'alchemy-focus',
+      profession: 'Alchemy',
+      name: 'Focus Draught',
+      description: 'Infuse a drink with mana.',
+      requiredLevel: 8,
+      active: false,
+      expGain: 9,
+      rewards: [
+        { itemId: 'minor-elixir', amount: 2 },
+        { itemId: 'mana-crystal', amount: 1 },
+      ],
+    },
+  ])
+
   const actions = reactive<ActionItem[]>([
     {
       id: 'train-strength',
@@ -296,6 +449,26 @@ export const useGameStore = defineStore('game', () => {
       description: 'Basic protection for the head.',
       maxStack: 1,
       priceCopper: 25,
+    },
+    'iron-ingot': {
+      id: 'iron-ingot',
+      name: 'Iron Ingot',
+      quality: 'Uncommon',
+      type: 'Resource',
+      subtype: 'Smelting',
+      description: 'Refined metal ready for crafting.',
+      maxStack: 30,
+      priceCopper: 16,
+    },
+    'minor-elixir': {
+      id: 'minor-elixir',
+      name: 'Minor Elixir',
+      quality: 'Uncommon',
+      type: 'Consumable',
+      subtype: 'Alchemy',
+      description: 'A simple potion that refreshes vitality.',
+      maxStack: 10,
+      priceCopper: 20,
     },
   })
 
@@ -665,6 +838,7 @@ export const useGameStore = defineStore('game', () => {
 
   const statList = computed(() => Object.values(stats))
   const skillList = computed(() => Object.values(skills))
+  const professionList = computed(() => Object.values(professions))
 
   const skillBonuses = computed(() => {
     const combatLevel = skills.Combat.level
@@ -682,9 +856,9 @@ export const useGameStore = defineStore('game', () => {
     }
   })
 
-  const defaultZone = zones[0] as Zone
+  const defaultZone = zones[0]!
 
-  const defaultEnemy: EnemyType = defaultZone.enemies[0]
+  const defaultEnemy: EnemyType = defaultZone.enemies[0]!
 
   const combat = reactive({
     active: false,
@@ -784,12 +958,31 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  const addProfessionExp = (key: ProfessionKey, amount: number) => {
+    const profession = professions[key]
+    profession.exp += amount
+    while (profession.exp >= profession.expToNext) {
+      profession.exp -= profession.expToNext
+      profession.level += 1
+      profession.expToNext = Math.floor(profession.expToNext * 1.25 + 15)
+    }
+  }
+
+  const isIdleActionActive = computed(() => actions.some((action) => action.active))
+  const isProfessionActionActive = computed(() =>
+    professionActions.some((action) => action.active),
+  )
+
   const randomInt = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min
 
   const pickEnemy = (zone: Zone): EnemyType => {
+    if (!zone.enemies.length) {
+      addCombatLog('system', `No enemies configured for ${zone.name}.`)
+      return defaultEnemy
+    }
     const index = Math.floor(Math.random() * zone.enemies.length)
-    return zone.enemies[index]!
+    return zone.enemies[index] ?? zone.enemies[0]
   }
 
   const spawnEnemy = () => {
@@ -827,11 +1020,18 @@ export const useGameStore = defineStore('game', () => {
     })
   }
 
+  const deactivateProfessionActions = () => {
+    professionActions.forEach((action) => {
+      action.active = false
+    })
+  }
+
   const toggleCombat = () => {
     combat.active = !combat.active
     if (combat.active) {
       combat.resting = false
       deactivateActions()
+      deactivateProfessionActions()
       addCombatLog('combat', `Combat started in ${currentZone.value.name}.`)
     } else {
       addCombatLog('combat', 'Combat stopped.')
@@ -843,6 +1043,7 @@ export const useGameStore = defineStore('game', () => {
     if (combat.resting) {
       combat.active = false
       deactivateActions()
+      deactivateProfessionActions()
       addCombatLog('rest', 'Resting to recover health.')
     } else {
       addCombatLog('rest', 'Rest ended.')
@@ -850,7 +1051,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const toggleAction = (action: ActionItem) => {
-    if (combat.active) return
+    if (combat.active || combat.resting || isProfessionActionActive.value) return
     actions.forEach((item) => {
       item.active = item.id === action.id ? !action.active : false
     })
@@ -912,7 +1113,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const runIdleActions = () => {
-    if (combat.active || combat.resting) return
+    if (combat.active || combat.resting || isProfessionActionActive.value) return
     actions.forEach((action) => {
       if (!action.active) return
       if (action.gains.exp) {
@@ -931,6 +1132,40 @@ export const useGameStore = defineStore('game', () => {
       if (action.gains.currency) {
         addCurrency(action.gains.currency)
       }
+    })
+  }
+
+  const toggleProfessionAction = (action: ProfessionAction) => {
+    const profession = professions[action.profession]
+    if (profession.level < action.requiredLevel) return
+    const nextActive = !action.active
+    professionActions.forEach((item) => {
+      item.active = item.id === action.id ? nextActive : false
+    })
+    if (nextActive) {
+      combat.active = false
+      combat.resting = false
+      deactivateActions()
+    }
+  }
+
+  const professionBonuses = computed(() => {
+    return {
+      Mining: 1 + professions.Mining.level * professions.Mining.bonusPerLevel,
+      Herbalism: 1 + professions.Herbalism.level * professions.Herbalism.bonusPerLevel,
+      Smelting: 1 + professions.Smelting.level * professions.Smelting.bonusPerLevel,
+      Alchemy: 1 + professions.Alchemy.level * professions.Alchemy.bonusPerLevel,
+    }
+  })
+
+  const runProfessionActions = () => {
+    if (combat.active || combat.resting || isIdleActionActive.value) return
+    const active = professionActions.find((action) => action.active)
+    if (!active) return
+    const bonus = professionBonuses.value[active.profession]
+    addProfessionExp(active.profession, active.expGain)
+    active.rewards.forEach((reward) => {
+      addItem(reward.itemId, Math.max(1, Math.floor(reward.amount * bonus)))
     })
   }
 
@@ -957,6 +1192,7 @@ export const useGameStore = defineStore('game', () => {
 
     runCombatTick()
     runIdleActions()
+    runProfessionActions()
   }
 
   let timer: number | undefined
@@ -980,6 +1216,12 @@ export const useGameStore = defineStore('game', () => {
     currency,
     stats,
     skills,
+    professions,
+    professionActions,
+    professionList,
+    professionBonuses,
+    isIdleActionActive,
+    isProfessionActionActive,
     actions,
     itemDefs,
     inventory,
@@ -1004,6 +1246,7 @@ export const useGameStore = defineStore('game', () => {
     toggleCombat,
     toggleResting,
     toggleAction,
+    toggleProfessionAction,
     setZone,
     addCombatLog,
     clearCombatLogs,

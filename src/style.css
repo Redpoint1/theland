@@ -578,6 +578,51 @@ button:disabled {
   padding-top: 2rem;
 }
 
+.profession-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.profession-meta {
+  text-align: right;
+}
+
+.profession-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profession-action {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: rgba(21, 30, 47, 0.75);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
+.profession-action.locked {
+  opacity: 0.55;
+}
+
+.reward-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(24, 34, 52, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  font-size: 0.7rem;
+  color: #c7d4f2;
+  white-space: nowrap;
+}
+
 .combat-log {
   max-height: 520px;
 }
