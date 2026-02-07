@@ -3,6 +3,10 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/game'
 import ProgressBar from '../components/ProgressBar.vue'
+import StatCard from '../components/StatCard.vue'
+import SkillCard from '../components/SkillCard.vue'
+import SkillBonusItem from '../components/SkillBonusItem.vue'
+import IdleActionCard from '../components/IdleActionCard.vue'
 
 const game = useGameStore()
 const {
@@ -110,75 +114,41 @@ const idleProgressValue = computed(() =>
       <div class="panel">
         <h2>Stats</h2>
         <div class="list">
-          <div v-for="stat in statList" :key="stat.name" class="list-item">
-            <div>
-              <div class="item-title">{{ stat.name }}</div>
-              <div class="item-desc">{{ stat.description }}</div>
-            </div>
-            <div class="item-value">
-              <div class="value">{{ stat.value }}</div>
-              <ProgressBar :value="stat.exp" :max="stat.expToNext" thin />
-              <div class="item-hint">{{ stat.exp }} / {{ stat.expToNext }}</div>
-            </div>
-          </div>
+          <StatCard v-for="stat in statList" :key="stat.name" :stat="stat" />
         </div>
       </div>
 
       <div class="panel">
         <h2>Skills</h2>
         <div class="list">
-          <div v-for="skill in skillList" :key="skill.name" class="list-item">
-            <div>
-              <div class="item-title">{{ skill.name }}</div>
-              <div class="item-desc">{{ skill.description }}</div>
-            </div>
-            <div class="item-value">
-              <div class="value">Lv. {{ skill.level }}</div>
-              <ProgressBar :value="skill.exp" :max="skill.expToNext" thin />
-              <div class="item-hint">{{ skill.exp }} / {{ skill.expToNext }}</div>
-            </div>
-          </div>
+          <SkillCard v-for="skill in skillList" :key="skill.name" :skill="skill" />
         </div>
       </div>
 
       <div class="panel">
         <h2>Skill Bonuses</h2>
         <div class="list">
-          <div v-for="bonus in bonusItems" :key="bonus.label" class="bonus-item">
-            <div class="item-title">{{ bonus.label }}</div>
-            <div class="bonus-value">{{ bonus.value }}</div>
-          </div>
+          <SkillBonusItem
+            v-for="bonus in bonusItems"
+            :key="bonus.label"
+            :label="bonus.label"
+            :value="bonus.value"
+          />
         </div>
       </div>
 
       <div class="panel actions">
         <h2>Idle Actions</h2>
         <div class="list">
-          <div v-for="action in actions" :key="action.id" class="action-card">
-            <div>
-              <div class="item-title">{{ action.name }}</div>
-              <div class="item-desc">{{ action.description }}</div>
-            </div>
-            <div class="action-controls">
-              <button
-                class="toggle"
-                :class="{ active: action.active }"
-                :disabled="combat.active || combat.resting"
-                @click="game.toggleAction(action)"
-              >
-                {{ action.active ? 'Active' : 'Idle' }}
-              </button>
-              <div class="action-hint">
-                Completion: 5s · +{{ action.gains.exp ?? 0 }} XP
-              </div>
-              <ProgressBar
-                v-if="action.active"
-                :value="idleProgressValue"
-                :max="actionDurationMs"
-                thin
-              />
-            </div>
-          </div>
+          <IdleActionCard
+            v-for="action in actions"
+            :key="action.id"
+            :action="action"
+            :disabled="combat.active || combat.resting"
+            :progress-value="idleProgressValue"
+            :action-duration-ms="actionDurationMs"
+            @toggle="game.toggleAction"
+          />
         </div>
       </div>
 
