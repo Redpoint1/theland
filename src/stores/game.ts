@@ -43,6 +43,15 @@ export interface EnemyType {
   rewardFactor: number
 }
 
+export type CombatLogType = 'combat' | 'damage' | 'kill' | 'rest' | 'system'
+
+export interface CombatLogEntry {
+  id: number
+  timestamp: number
+  type: CombatLogType
+  message: string
+}
+
 export interface Zone {
   id: string
   name: string
@@ -546,6 +555,26 @@ export const useGameStore = defineStore('game', () => {
     statExp: defaultZone.baseRewards.statExp,
   })
 
+  const combatLogs = ref<CombatLogEntry[]>([])
+  let combatLogId = 0
+
+  const addCombatLog = (type: CombatLogType, message: string) => {
+    combatLogs.value.push({
+      id: (combatLogId += 1),
+      timestamp: Date.now(),
+      type,
+      message,
+    })
+
+    if (combatLogs.value.length > 1000) {
+      combatLogs.value.splice(0, combatLogs.value.length - 1000)
+    }
+  }
+
+  const clearCombatLogs = () => {
+    combatLogs.value = []
+  }
+
   const currentZone = computed((): Zone => zones.find((zone) => zone.id === combat.zoneId) ?? defaultZone)
   const maxHp = computed(() => Math.floor(character.level * 8 + stats.Vitality.value * 12))
   const playerHp = ref(maxHp.value)
@@ -609,15 +638,15 @@ export const useGameStore = defineStore('game', () => {
   const randomInt = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min
 
-  const pickEnemy = (zone: Zone): EnemyType | undefined => {
-    if (!zone.enemies.length) return undefined
-    const index = Math.floor(Math.random() * zone.enemies.length)
-    return zone.enemies[index]
+  const pickEnemy = (zone: Zone): EnemyType => {
+    const pool = zone.enemies.length ? zone.enemies : [defaultEnemy]
+    const index = Math.floor(Math.random() * pool.length)
+    return pool[index] ?? defaultEnemy
   }
 
   const spawnEnemy = () => {
     const zone = currentZone.value
-    const enemy = pickEnemy(zone) ?? defaultEnemy
+    const enemy = pickEnemy(zone)
     const level = randomInt(zone.levelMin, zone.levelMax)
     const baseHp = Math.floor(level * 10 * enemy.hpFactor + zone.basePower * 4)
     const rewardScale = (1 + level * 0.06) * enemy.rewardFactor
@@ -632,6 +661,11 @@ export const useGameStore = defineStore('game', () => {
     combatRewards.copper = Math.floor(zone.baseRewards.copper * rewardScale)
     combatRewards.skillExp = Math.floor(zone.baseRewards.skillExp * rewardScale)
     combatRewards.statExp = Math.floor(zone.baseRewards.statExp * rewardScale)
+
+    addCombatLog(
+      'combat',
+      `Encountered ${combat.enemyName} (Lv. ${combat.enemyLevel}) in ${zone.name}.`,
+    )
   }
 
   const setZone = (zoneId: string) => {
@@ -650,6 +684,9 @@ export const useGameStore = defineStore('game', () => {
     if (combat.active) {
       combat.resting = false
       deactivateActions()
+      addCombatLog('combat', `Combat started in ${currentZone.value.name}.`)
+    } else {
+      addCombatLog('combat', 'Combat stopped.')
     }
   }
 
@@ -658,6 +695,9 @@ export const useGameStore = defineStore('game', () => {
     if (combat.resting) {
       combat.active = false
       deactivateActions()
+      addCombatLog('rest', 'Resting to recover health.')
+    } else {
+      addCombatLog('rest', 'Rest ended.')
     }
   }
 
@@ -690,7 +730,14 @@ export const useGameStore = defineStore('game', () => {
     )
     combat.enemyHp = Math.max(0, combat.enemyHp - playerDamage)
 
+    addCombatLog('damage', `You hit ${combat.enemyName} for ${playerDamage} damage.`)
+
     if (combat.enemyHp === 0) {
+      const rewardSummary = `+${combatRewards.exp} XP, +${combatRewards.copper}c`
+      addCombatLog(
+        'kill',
+        `Defeated ${combat.enemyName} (Lv. ${combat.enemyLevel}). Rewards: ${rewardSummary}.`,
+      )
       addCharacterExp(combatRewards.exp)
       addCurrency({ copper: combatRewards.copper })
       addSkillExp('Combat', combatRewards.skillExp)
@@ -707,9 +754,12 @@ export const useGameStore = defineStore('game', () => {
     const enemyDamage = Math.max(1, Math.floor(enemyDamageBase * (1 - damageReduction)))
     playerHp.value = Math.max(0, playerHp.value - enemyDamage)
 
+    addCombatLog('damage', `${combat.enemyName} hits you for ${enemyDamage} damage (received).`)
+
     if (playerHp.value === 0) {
       combat.active = false
       combat.resting = true
+      addCombatLog('combat', 'You are downed and begin resting.')
     }
   }
 
@@ -746,8 +796,10 @@ export const useGameStore = defineStore('game', () => {
       const regenBase = Math.max(2, Math.floor(stats.Spirit.value * 1.2 + stats.Vitality.value * 0.4))
       const regen = Math.floor(regenBase * skillBonuses.value.regenMultiplier)
       playerHp.value = Math.min(maxHp.value, playerHp.value + regen)
+      addCombatLog('rest', `Recovered ${regen} HP.`)
       if (playerHp.value >= maxHp.value) {
         combat.resting = false
+        addCombatLog('rest', 'Fully recovered.')
       }
     } else if (!combat.active && playerHp.value < maxHp.value) {
       const regenBase = Math.max(1, Math.floor(stats.Spirit.value * 0.6))
@@ -784,6 +836,7 @@ export const useGameStore = defineStore('game', () => {
     zones,
     combat,
     combatRewards,
+    combatLogs,
     playerHp,
     maxHp,
     statList,
@@ -796,6 +849,8 @@ export const useGameStore = defineStore('game', () => {
     toggleResting,
     toggleAction,
     setZone,
+    addCombatLog,
+    clearCombatLogs,
     startTicker,
     stopTicker,
   }
