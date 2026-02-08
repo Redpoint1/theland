@@ -14,7 +14,7 @@ defineProps<{
       <div class="item-desc">{{ stat.description }}</div>
     </div>
     <div class="item-value">
-      <div class="value">{{ stat.value }}</div>
+      <div class="value">+{{ stat.value }}</div>
       <ProgressBar :value="stat.exp" :max="stat.expToNext" thin />
       <div class="item-hint">{{ stat.exp }} / {{ stat.expToNext }}</div>
     </div>

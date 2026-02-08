@@ -7,6 +7,7 @@ export interface Stat {
   value: number
   exp: number
   expToNext: number
+  baseExpToNext: number
   description: string
 }
 
@@ -15,6 +16,7 @@ export interface Skill {
   level: number
   exp: number
   expToNext: number
+  baseExpToNext: number
   description: string
 }
 
@@ -23,6 +25,7 @@ export interface Profession {
   level: number
   exp: number
   expToNext: number
+  baseExpToNext: number
   description: string
   bonusLabel: string
   bonusPerLevel: number

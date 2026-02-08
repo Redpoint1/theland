@@ -63,6 +63,7 @@ export const useGameStore = defineStore('game', () => {
     level: 1,
     exp: 0,
     expToNext: 120,
+    baseExpToNext: 120,
   })
 
   const currency = reactive({

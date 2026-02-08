@@ -7,6 +7,7 @@ import type {
   Stat,
   StatKey,
 } from './types'
+import { computeExpToNext } from './experience'
 
 export interface CurrencyState {
   copper: number
@@ -22,6 +23,7 @@ export interface CharacterState {
   level: number
   exp: number
   expToNext: number
+  baseExpToNext: number
 }
 
 export interface SkillBonuses {
@@ -47,6 +49,17 @@ export const useProgressionLogic = ({
   skills,
   professions,
 }: ProgressionDeps) => {
+  const characterExpToNext = (level: number) =>
+    computeExpToNext(character.baseExpToNext, level, 1.18, 50)
+
+  const statExpToNext = (stat: Stat) =>
+    computeExpToNext(stat.baseExpToNext, stat.value, 1.2, 15)
+
+  const skillExpToNext = (skill: Skill) =>
+    computeExpToNext(skill.baseExpToNext, skill.level, 1.22, 10)
+
+  const professionExpToNext = (profession: Profession) =>
+    computeExpToNext(profession.baseExpToNext, profession.level, 1.25, 15)
   const statList = computed(() => Object.values(stats))
   const skillList = computed(() => Object.values(skills))
   const professionList = computed(() => Object.values(professions))
@@ -82,9 +95,10 @@ export const useProgressionLogic = ({
     while (character.exp >= character.expToNext) {
       character.exp -= character.expToNext
       character.level += 1
-      character.expToNext = Math.floor(character.expToNext * 1.18 + 50)
+      character.expToNext = characterExpToNext(character.level)
       statList.value.forEach((stat) => {
         stat.value += 1
+        stat.expToNext = statExpToNext(stat)
       })
     }
   }
@@ -95,7 +109,7 @@ export const useProgressionLogic = ({
     while (stat.exp >= stat.expToNext) {
       stat.exp -= stat.expToNext
       stat.value += 1
-      stat.expToNext = Math.floor(stat.expToNext * 1.2 + 15)
+      stat.expToNext = statExpToNext(stat)
     }
   }
 
@@ -105,7 +119,7 @@ export const useProgressionLogic = ({
     while (skill.exp >= skill.expToNext) {
       skill.exp -= skill.expToNext
       skill.level += 1
-      skill.expToNext = Math.floor(skill.expToNext * 1.22 + 10)
+      skill.expToNext = skillExpToNext(skill)
     }
   }
 
@@ -115,7 +129,7 @@ export const useProgressionLogic = ({
     while (profession.exp >= profession.expToNext) {
       profession.exp -= profession.expToNext
       profession.level += 1
-      profession.expToNext = Math.floor(profession.expToNext * 1.25 + 15)
+      profession.expToNext = professionExpToNext(profession)
     }
   }
 
