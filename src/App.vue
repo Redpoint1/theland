@@ -5,17 +5,20 @@ import { RouterLink, RouterView } from 'vue-router'
 import { useGameStore } from './stores/game'
 
 const game = useGameStore()
-const { character, currency, playerHp, maxHp, combat, actions } = storeToRefs(game)
+const { character, currency, playerHp, maxHp, actions, professionActions, activeTask } = storeToRefs(game)
 
 const activeActionName = computed(() => {
-  const active = actions.value.find((action) => action.active)
-  return active ? active.name : 'None'
-})
-
-const combatStatus = computed(() => {
-  if (combat.value.active) return 'Fighting'
-  if (combat.value.resting) return 'Resting'
-  return 'Idle'
+  if (activeTask.value.type === 'idle') {
+    const active = actions.value.find((action) => action.id === activeTask.value.actionId)
+    return active ? active.name : 'None'
+  }
+  if (activeTask.value.type === 'profession') {
+    const active = professionActions.value.find((action) => action.id === activeTask.value.actionId)
+    return active ? active.name : 'None'
+  }
+  if (activeTask.value.type === 'combat') return 'Combat'
+  if (activeTask.value.type === 'rest') return 'Resting'
+  return 'None'
 })
 
 onMounted(() => {
@@ -64,12 +67,8 @@ onBeforeUnmount(() => {
         <span class="hud-value">{{ playerHp }} / {{ maxHp }}</span>
       </div>
       <div class="hud-item wide">
-        <span class="hud-label">Idle Action</span>
+        <span class="hud-label">Action</span>
         <span class="hud-value">{{ activeActionName }}</span>
-      </div>
-      <div class="hud-item">
-        <span class="hud-label">Combat</span>
-        <span class="hud-value">{{ combatStatus }}</span>
       </div>
     </section>
     <RouterView />

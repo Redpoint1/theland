@@ -20,7 +20,7 @@ const {
   statList,
   skillList,
   actions,
-  combat,
+  activeTask,
   skillBonuses,
   idleActionProgress,
   idleActionJustCompleted,
@@ -56,6 +56,9 @@ const bonusItems = computed(() => [
 const idleProgressValue = computed(() =>
   idleActionJustCompleted.value ? actionDurationMs : idleActionProgress.value,
 )
+
+const isIdleActionActive = (actionId: string) =>
+  activeTask.value.type === 'idle' && activeTask.value.actionId === actionId
 
 const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
 
@@ -148,7 +151,8 @@ const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
             v-for="action in actions"
             :key="action.id"
             :action="action"
-            :disabled="combat.active || combat.resting"
+            :is-active="isIdleActionActive(action.id)"
+            :disabled="false"
             :progress-value="idleProgressValue"
             :action-duration-ms="actionDurationMs"
             @toggle="game.toggleAction"

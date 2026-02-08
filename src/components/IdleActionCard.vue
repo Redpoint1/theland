@@ -4,6 +4,7 @@ import ProgressBar from './ProgressBar.vue'
 
 const props = defineProps<{
   action: ActionItem
+  isActive: boolean
   disabled: boolean
   progressValue: number
   actionDurationMs: number
@@ -23,17 +24,17 @@ const emit = defineEmits<{
     <div class="action-controls">
       <button
         class="toggle"
-        :class="{ active: props.action.active }"
+        :class="{ active: props.isActive }"
         :disabled="props.disabled"
         @click="emit('toggle', props.action)"
       >
-        {{ props.action.active ? 'Active' : 'Idle' }}
+        {{ props.isActive ? 'Active' : 'Idle' }}
       </button>
       <div class="action-hint">
         Completion: 5s · +{{ props.action.gains.exp ?? 0 }} XP
       </div>
       <ProgressBar
-        v-if="props.action.active"
+        v-if="props.isActive"
         :value="props.progressValue"
         :max="props.actionDurationMs"
         thin

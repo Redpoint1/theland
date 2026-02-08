@@ -13,6 +13,7 @@ const {
   professionActionProgress,
   professionActionJustCompleted,
   professionLogs,
+  activeTask,
 } = storeToRefs(game)
 const { getItemDef, getItemQuantity, actionDurationMs } = game
 
@@ -29,6 +30,10 @@ const actionsByProfession = computed(() => {
 
 const professionProgressValue = computed(() =>
   professionActionJustCompleted.value ? actionDurationMs : professionActionProgress.value,
+)
+
+const activeProfessionActionId = computed(() =>
+  activeTask.value.type === 'profession' ? activeTask.value.actionId : undefined,
 )
 
 const logEntries = computed(() => professionLogs.value.slice().reverse())
@@ -55,6 +60,7 @@ const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
         :key="profession.name"
         :profession="profession"
         :actions="actionsByProfession.get(profession.name) ?? []"
+        :active-action-id="activeProfessionActionId"
         :bonus-percent="Math.round((professionBonuses[profession.name] - 1) * 100)"
         :action-duration-ms="actionDurationMs"
         :progress-value="professionProgressValue"

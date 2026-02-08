@@ -1,6 +1,8 @@
-import { computed, ref, type ComputedRef } from 'vue'
+import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import type { CurrencyState, SkillBonuses } from './progression'
 import type {
+  ActiveTask,
+  ActiveTaskType,
   ActionItem,
   Profession,
   ProfessionAction,
@@ -13,7 +15,7 @@ export interface ActionLogicDeps {
   actions: ActionItem[]
   professionActions: ProfessionAction[]
   professions: Record<ProfessionKey, Profession>
-  combat: { active: boolean; resting: boolean }
+  activeTask: Ref<ActiveTask>
   actionDurationMs: number
   tickMs: number
   skillBonuses: ComputedRef<SkillBonuses>
@@ -34,7 +36,7 @@ export const useActionLogic = ({
   actions,
   professionActions,
   professions,
-  combat,
+  activeTask,
   actionDurationMs,
   tickMs,
   skillBonuses,
@@ -55,21 +57,23 @@ export const useActionLogic = ({
   const idleActionJustCompleted = ref(false)
   const professionActionJustCompleted = ref(false)
 
-  const isIdleActionActive = computed(() => actions.some((action) => action.active))
-  const isProfessionActionActive = computed(() =>
-    professionActions.some((action) => action.active),
-  )
+  const isIdleActionActive = computed(() => activeTask.value.type === 'idle')
+  const isProfessionActionActive = computed(() => activeTask.value.type === 'profession')
+
+  const setActiveTask = (type: ActiveTaskType, actionId?: string) => {
+    activeTask.value = { type, actionId }
+  }
 
   const deactivateActions = () => {
-    actions.forEach((action) => {
-      action.active = false
-    })
+    if (activeTask.value.type === 'idle') {
+      setActiveTask('none')
+    }
   }
 
   const deactivateProfessionActions = () => {
-    professionActions.forEach((action) => {
-      action.active = false
-    })
+    if (activeTask.value.type === 'profession') {
+      setActiveTask('none')
+    }
   }
 
   const applyIdleGains = (action: ActionItem) => {
@@ -137,24 +141,24 @@ export const useActionLogic = ({
   }
 
   const toggleAction = (action: ActionItem) => {
-    if (combat.active || combat.resting) {
-      addActionLog('system', 'Cannot start idle actions during combat or rest.')
-      return
+    const previousActive =
+      activeTask.value.type === 'idle'
+        ? actions.find((item) => item.id === activeTask.value.actionId)
+        : undefined
+    const wasActive = activeTask.value.type === 'idle' && activeTask.value.actionId === action.id
+    if (wasActive) {
+      setActiveTask('none')
+    } else {
+      setActiveTask('idle', action.id)
     }
-    const previousActive = actions.find((item) => item.active)
-    actions.forEach((item) => {
-      item.active = item.id === action.id ? !action.active : false
-    })
     idleActionProgress.value = 0
     idleActionJustCompleted.value = false
-    const activated = actions.find((item) => item.id === action.id)?.active
+    const activated = activeTask.value.type === 'idle' && activeTask.value.actionId === action.id
     if (previousActive && previousActive.id !== action.id) {
       addActionLog('action', `Stopped ${previousActive.name}.`)
     }
     if (activated) {
       addActionLog('action', `Started ${action.name}.`)
-      combat.active = false
-      combat.resting = false
       deactivateProfessionActions()
     } else {
       addActionLog('action', `Stopped ${action.name}.`)
@@ -162,9 +166,14 @@ export const useActionLogic = ({
   }
 
   const runIdleActions = () => {
-    if (combat.active || combat.resting) return
-    const active = actions.find((action) => action.active)
+    if (activeTask.value.type !== 'idle') {
+      idleActionProgress.value = 0
+      idleActionJustCompleted.value = false
+      return
+    }
+    const active = actions.find((action) => action.id === activeTask.value.actionId)
     if (!active) {
+      setActiveTask('none')
       idleActionProgress.value = 0
       idleActionJustCompleted.value = false
       return
@@ -199,20 +208,24 @@ export const useActionLogic = ({
       )
       return
     }
-    const previousActive = professionActions.find((item) => item.active)
-    const nextActive = !action.active
-    professionActions.forEach((item) => {
-      item.active = item.id === action.id ? nextActive : false
-    })
+    const previousActive =
+      activeTask.value.type === 'profession'
+        ? professionActions.find((item) => item.id === activeTask.value.actionId)
+        : undefined
+    const wasActive =
+      activeTask.value.type === 'profession' && activeTask.value.actionId === action.id
+    if (wasActive) {
+      setActiveTask('none')
+    } else {
+      setActiveTask('profession', action.id)
+    }
     professionActionProgress.value = 0
     professionActionJustCompleted.value = false
     if (previousActive && previousActive.id !== action.id) {
       addProfessionLog('action', `Stopped ${previousActive.name}.`)
     }
-    if (nextActive) {
+    if (!wasActive) {
       addProfessionLog('action', `Started ${action.name}.`)
-      combat.active = false
-      combat.resting = false
       deactivateActions()
     } else {
       addProfessionLog('action', `Stopped ${action.name}.`)
@@ -229,16 +242,21 @@ export const useActionLogic = ({
   })
 
   const runProfessionActions = () => {
-    if (combat.active || combat.resting || isIdleActionActive.value) return
-    const active = professionActions.find((action) => action.active)
+    if (activeTask.value.type !== 'profession') {
+      professionActionProgress.value = 0
+      professionActionJustCompleted.value = false
+      return
+    }
+    const active = professionActions.find((action) => action.id === activeTask.value.actionId)
     if (!active) {
+      setActiveTask('none')
       professionActionProgress.value = 0
       professionActionJustCompleted.value = false
       return
     }
     const missingInputs = getMissingInputs(active)
     if (missingInputs.length > 0) {
-      active.active = false
+      setActiveTask('none')
       professionActionProgress.value = 0
       professionActionJustCompleted.value = false
       addProfessionLog(
@@ -259,7 +277,7 @@ export const useActionLogic = ({
           (input) => getItemQuantity(input.itemId) >= input.amount,
         )
         if (!hasAllInputs) {
-          active.active = false
+          setActiveTask('none')
           professionActionProgress.value = 0
           professionActionJustCompleted.value = false
           addProfessionLog(

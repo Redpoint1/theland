@@ -6,7 +6,19 @@ import ProgressBar from '../components/ProgressBar.vue'
 import LogPanel from '../components/LogPanel.vue'
 
 const game = useGameStore()
-const { zones, combat, combatRewards, combatLogs, currentZone, playerHp, maxHp } = storeToRefs(game)
+const {
+  zones,
+  combat,
+  combatRewards,
+  combatLogs,
+  currentZone,
+  playerHp,
+  maxHp,
+  activeTask,
+} = storeToRefs(game)
+
+const isFighting = computed(() => activeTask.value.type === 'combat')
+const isResting = computed(() => activeTask.value.type === 'rest')
 
 const filters = ref<Record<CombatLogType, boolean>>({
   combat: true,
@@ -41,15 +53,15 @@ const filteredLogs = computed(() =>
       </div>
       <div class="hero-actions">
         <div class="combat-buttons">
-          <button class="toggle" :class="{ active: combat.active }" @click="game.toggleCombat">
-            {{ combat.active ? 'Fighting' : 'Start Combat' }}
+          <button class="toggle" :class="{ active: isFighting }" @click="game.toggleCombat">
+            {{ isFighting ? 'Fighting' : 'Start Combat' }}
           </button>
           <button
             class="toggle"
-            :class="{ active: combat.resting }"
+            :class="{ active: isResting }"
             @click="game.toggleResting"
           >
-            {{ combat.resting ? 'Resting' : 'Rest' }}
+            {{ isResting ? 'Resting' : 'Rest' }}
           </button>
         </div>
         <div class="tick">Health: {{ playerHp }} / {{ maxHp }}</div>

@@ -1,10 +1,10 @@
 import type { ComputedRef, Ref } from 'vue'
 import type { SkillBonuses } from './progression'
-import type { CombatLogType, Stat, StatKey } from './types'
+import type { ActiveTask, CombatLogType, Stat, StatKey } from './types'
 
 export interface TickerDeps {
   paused: Ref<boolean>
-  combat: { active: boolean; resting: boolean }
+  activeTask: Ref<ActiveTask>
   playerHp: Ref<number>
   maxHp: ComputedRef<number>
   stats: Record<StatKey, Stat>
@@ -19,7 +19,7 @@ export interface TickerDeps {
 
 export const useTicker = ({
   paused,
-  combat,
+  activeTask,
   playerHp,
   maxHp,
   stats,
@@ -37,16 +37,16 @@ export const useTicker = ({
       playerHp.value = maxHp.value
     }
 
-    if (combat.resting && playerHp.value < maxHp.value) {
+    if (activeTask.value.type === 'rest' && playerHp.value < maxHp.value) {
       const regenBase = Math.max(2, Math.floor(stats.Spirit.value * 1.2 + stats.Vitality.value * 0.4))
       const regen = Math.floor(regenBase * skillBonuses.value.regenMultiplier)
       playerHp.value = Math.min(maxHp.value, playerHp.value + regen)
       addCombatLog('rest', `Recovered ${regen} HP.`)
       if (playerHp.value >= maxHp.value) {
-        combat.resting = false
+        activeTask.value = { type: 'none' }
         addCombatLog('rest', 'Fully recovered.')
       }
-    } else if (!combat.active && playerHp.value < maxHp.value) {
+    } else if (activeTask.value.type !== 'combat' && playerHp.value < maxHp.value) {
       const regenBase = Math.max(1, Math.floor(stats.Spirit.value * 0.6))
       const regen = Math.floor(regenBase * skillBonuses.value.regenMultiplier)
       playerHp.value = Math.min(maxHp.value, playerHp.value + regen)

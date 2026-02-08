@@ -1,6 +1,7 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
 import type { CurrencyState, SkillBonuses } from './progression'
 import type {
+  ActiveTask,
   CombatLogType,
   EnemyType,
   Skill,
@@ -11,8 +12,6 @@ import type {
 } from './types'
 
 export interface CombatState {
-  active: boolean
-  resting: boolean
   zoneId: string
   enemyName: string
   enemyLevel: number
@@ -37,6 +36,7 @@ export interface CombatLogicDeps {
   combat: CombatState
   combatRewards: CombatRewards
   playerHp: Ref<number>
+  activeTask: Ref<ActiveTask>
   defaultZone: Zone
   defaultEnemy: EnemyType
   addCombatLog: (type: CombatLogType, message: string) => void
@@ -57,6 +57,7 @@ export const useCombatLogic = ({
   combat,
   combatRewards,
   playerHp,
+  activeTask,
   defaultZone,
   defaultEnemy,
   addCombatLog,
@@ -69,6 +70,10 @@ export const useCombatLogic = ({
 }: CombatLogicDeps) => {
   const currentZone = computed((): Zone => zones.find((zone) => zone.id === combat.zoneId) ?? defaultZone)
   const maxHp = computed(() => Math.floor(character.level * 8 + stats.Vitality.value * 12))
+
+  const setActiveTask = (type: ActiveTask['type']) => {
+    activeTask.value = { type }
+  }
 
   const randomInt = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min
@@ -112,31 +117,31 @@ export const useCombatLogic = ({
   }
 
   const toggleCombat = () => {
-    combat.active = !combat.active
-    if (combat.active) {
-      combat.resting = false
-      deactivateActions()
-      deactivateProfessionActions()
-      addCombatLog('combat', `Combat started in ${currentZone.value.name}.`)
-    } else {
+    if (activeTask.value.type === 'combat') {
+      setActiveTask('none')
       addCombatLog('combat', 'Combat stopped.')
+      return
     }
+    setActiveTask('combat')
+    deactivateActions()
+    deactivateProfessionActions()
+    addCombatLog('combat', `Combat started in ${currentZone.value.name}.`)
   }
 
   const toggleResting = () => {
-    combat.resting = !combat.resting
-    if (combat.resting) {
-      combat.active = false
-      deactivateActions()
-      deactivateProfessionActions()
-      addCombatLog('rest', 'Resting to recover health.')
-    } else {
+    if (activeTask.value.type === 'rest') {
+      setActiveTask('none')
       addCombatLog('rest', 'Rest ended.')
+      return
     }
+    setActiveTask('rest')
+    deactivateActions()
+    deactivateProfessionActions()
+    addCombatLog('rest', 'Resting to recover health.')
   }
 
   const runCombatTick = () => {
-    if (!combat.active) return
+    if (activeTask.value.type !== 'combat') return
     if (combat.enemyHp <= 0) {
       spawnEnemy()
     }
@@ -184,8 +189,7 @@ export const useCombatLogic = ({
     addCombatLog('damage', `${combat.enemyName} hits you for ${enemyDamage} damage (received).`)
 
     if (playerHp.value === 0) {
-      combat.active = false
-      combat.resting = true
+      setActiveTask('rest')
       addCombatLog('combat', 'You are downed and begin resting.')
     }
   }

@@ -134,7 +134,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Scrape the Vein',
     description: 'Chip away at exposed ore.',
     requiredLevel: 0,
-    active: false,
     expGain: 4,
     rewards: [{ itemId: 'iron-ore', amount: 2 }],
   },
@@ -144,7 +143,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Deep Vein',
     description: 'Push deeper for better ore.',
     requiredLevel: 6,
-    active: false,
     expGain: 7,
     rewards: [
       { itemId: 'iron-ore', amount: 4 },
@@ -157,7 +155,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Forage Mist Herbs',
     description: 'Collect common herbs near the village.',
     requiredLevel: 0,
-    active: false,
     expGain: 4,
     rewards: [{ itemId: 'mist-herb', amount: 3 }],
   },
@@ -167,7 +164,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Night Bloom Hunt',
     description: 'Hunt rare blooms at dusk.',
     requiredLevel: 5,
-    active: false,
     expGain: 6,
     rewards: [
       { itemId: 'mist-herb', amount: 5 },
@@ -180,7 +176,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Smelt Iron',
     description: 'Refine ore into ingots.',
     requiredLevel: 0,
-    active: false,
     expGain: 5,
     inputs: [{ itemId: 'iron-ore', amount: 3 }],
     rewards: [{ itemId: 'iron-ingot', amount: 1 }],
@@ -191,7 +186,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Purify Ingots',
     description: 'Produce higher quality ingots.',
     requiredLevel: 7,
-    active: false,
     expGain: 8,
     inputs: [
       { itemId: 'iron-ore', amount: 6 },
@@ -205,7 +199,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Brew Minor Tonic',
     description: 'Basic restorative mixture.',
     requiredLevel: 0,
-    active: false,
     expGain: 5,
     inputs: [{ itemId: 'mist-herb', amount: 3 }],
     rewards: [{ itemId: 'minor-elixir', amount: 1 }],
@@ -216,7 +209,6 @@ export const createProfessionActions = (): ProfessionAction[] => [
     name: 'Focus Draught',
     description: 'Infuse a drink with mana.',
     requiredLevel: 8,
-    active: false,
     expGain: 9,
     inputs: [
       { itemId: 'mist-herb', amount: 6 },
@@ -234,7 +226,6 @@ export const createActions = (): ActionItem[] => [
     id: 'train-strength',
     name: 'Train Strength',
     description: 'Lift, strike, and grind power gains.',
-    active: true,
     gains: {
       exp: 5,
       stats: { Strength: 7, Vitality: 3 },
@@ -245,7 +236,6 @@ export const createActions = (): ActionItem[] => [
     id: 'forest-run',
     name: 'Forest Run',
     description: 'Sprint and weave through the wilds.',
-    active: false,
     gains: {
       exp: 4,
       stats: { Agility: 6, Vitality: 2 },
@@ -256,7 +246,6 @@ export const createActions = (): ActionItem[] => [
     id: 'meditate',
     name: 'Meditate',
     description: 'Focus the core and gather mana.',
-    active: false,
     gains: {
       exp: 3,
       stats: { Spirit: 7, Intelligence: 3 },
@@ -267,7 +256,6 @@ export const createActions = (): ActionItem[] => [
     id: 'gather',
     name: 'Gather Herbs',
     description: 'Idle harvesting for simple income.',
-    active: false,
     gains: {
       exp: 2,
       stats: { Agility: 1, Intelligence: 2 },
@@ -278,7 +266,6 @@ export const createActions = (): ActionItem[] => [
     id: 'craft',
     name: 'Craft Supplies',
     description: 'Turn finds into coin and skill.',
-    active: false,
     gains: {
       exp: 3,
       stats: { Intelligence: 5 },

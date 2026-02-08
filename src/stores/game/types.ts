@@ -34,7 +34,6 @@ export interface ProfessionAction {
   name: string
   description: string
   requiredLevel: number
-  active: boolean
   expGain: number
   inputs?: Array<{ itemId: string; amount: number }>
   rewards: Array<{ itemId: string; amount: number }>
@@ -51,8 +50,14 @@ export interface ActionItem {
   id: string
   name: string
   description: string
-  active: boolean
   gains: ActionGain
+}
+
+export type ActiveTaskType = 'none' | 'idle' | 'profession' | 'combat' | 'rest'
+
+export interface ActiveTask {
+  type: ActiveTaskType
+  actionId?: string
 }
 
 export interface EnemyType {

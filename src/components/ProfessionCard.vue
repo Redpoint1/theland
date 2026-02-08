@@ -6,6 +6,7 @@ import type { Profession, ProfessionAction } from '../stores/game'
 const props = defineProps<{
   profession: Profession
   actions: ProfessionAction[]
+  activeActionId?: string
   bonusPercent: number
   actionDurationMs: number
   progressValue: number
@@ -43,6 +44,7 @@ const props = defineProps<{
         :key="action.id"
         :profession="props.profession"
         :action="action"
+        :is-active="props.activeActionId === action.id"
         :progress-value="props.progressValue"
         :action-duration-ms="props.actionDurationMs"
         :get-item-name="props.getItemName"

@@ -12,6 +12,7 @@ import {
   seedInventoryItems,
 } from './game/data'
 import type {
+  ActiveTask,
   ActionItem,
   EnemyType,
   InventorySlot,
@@ -33,6 +34,8 @@ import { useProgressionLogic } from './game/progression'
 import { useTicker } from './game/ticker'
 
 export type {
+  ActiveTask,
+  ActiveTaskType,
   ActionItem,
   ActionLogEntry,
   ActionLogType,
@@ -78,6 +81,12 @@ export const useGameStore = defineStore('game', () => {
 
   const actions = reactive<ActionItem[]>(createActions())
 
+  const defaultIdleActionId = actions[0]?.id
+  const activeTask = ref<ActiveTask>({
+    type: defaultIdleActionId ? 'idle' : 'none',
+    actionId: defaultIdleActionId,
+  })
+
   const baseInventorySlots = 30
 
   const itemDefs = reactive<Record<string, ItemDef>>(createItemDefs())
@@ -89,8 +98,6 @@ export const useGameStore = defineStore('game', () => {
   const defaultEnemy: EnemyType = defaultZone.enemies[0]!
 
   const combat = reactive({
-    active: false,
-    resting: false,
     zoneId: defaultZone.id,
     enemyName: defaultEnemy.name,
     enemyLevel: defaultZone.levelMin,
@@ -181,7 +188,7 @@ export const useGameStore = defineStore('game', () => {
     actions,
     professionActions,
     professions,
-    combat,
+    activeTask,
     actionDurationMs,
     tickMs,
     skillBonuses,
@@ -215,6 +222,7 @@ export const useGameStore = defineStore('game', () => {
     combat,
     combatRewards,
     playerHp,
+    activeTask,
     defaultZone,
     defaultEnemy,
     addCombatLog,
@@ -230,7 +238,7 @@ export const useGameStore = defineStore('game', () => {
 
   const { startTicker, stopTicker } = useTicker({
     paused,
-    combat,
+    activeTask,
     playerHp,
     maxHp,
     stats,
@@ -265,6 +273,7 @@ export const useGameStore = defineStore('game', () => {
     professionActionJustCompleted,
     actionDurationMs,
     actions,
+    activeTask,
     itemDefs,
     inventory,
     inventorySlots,

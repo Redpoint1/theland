@@ -6,6 +6,7 @@ import type { Profession, ProfessionAction } from '../stores/game'
 const props = defineProps<{
   profession: Profession
   action: ProfessionAction
+  isActive: boolean
   progressValue: number
   actionDurationMs: number
   getItemName: (itemId: string) => string
@@ -49,7 +50,7 @@ const hasMissingInputs = computed(() =>
         </span>
       </div>
       <ProgressBar
-        v-if="props.action.active"
+        v-if="props.isActive"
         :value="props.progressValue"
         :max="props.actionDurationMs"
         thin
@@ -57,11 +58,11 @@ const hasMissingInputs = computed(() =>
     </div>
     <button
       class="toggle"
-      :class="{ active: props.action.active }"
+      :class="{ active: props.isActive }"
       :disabled="props.profession.level < props.action.requiredLevel || hasMissingInputs"
       @click="props.onToggle(props.action)"
     >
-      {{ props.action.active ? 'Active' : 'Idle' }}
+      {{ props.isActive ? 'Active' : 'Idle' }}
     </button>
   </div>
 </template>
