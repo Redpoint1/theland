@@ -31,6 +31,7 @@ import { useCombatLogic } from './game/combat'
 import { useInventoryLogic } from './game/inventory'
 import { useLogbook } from './game/logs'
 import { useProgressionLogic } from './game/progression'
+import { computeExpToNext } from './game/experience'
 import { useTicker } from './game/ticker'
 
 export type {
@@ -134,7 +135,7 @@ export const useGameStore = defineStore('game', () => {
     skillBonuses,
     currencyBreakdown,
     addCurrency,
-    addCharacterExp,
+    addCharacterExp: addCharacterExpCore,
     addStatExp,
     addSkillExp,
     addProfessionExp,
@@ -145,6 +146,59 @@ export const useGameStore = defineStore('game', () => {
     skills,
     professions,
   })
+
+  const attributePoints = ref(0)
+  const statAllocations = reactive<Record<StatKey, number>>({
+    Strength: 0,
+    Agility: 0,
+    Vitality: 0,
+    Spirit: 0,
+    Intelligence: 0,
+  })
+
+  const allocatedPoints = computed(() =>
+    Object.values(statAllocations).reduce((total, value) => total + value, 0),
+  )
+
+  const remainingAttributePoints = computed(
+    () => attributePoints.value - allocatedPoints.value,
+  )
+
+  const addCharacterExp = (amount: number) => {
+    const levelsGained = addCharacterExpCore(amount)
+    if (levelsGained > 0) {
+      attributePoints.value += levelsGained * 3
+    }
+    return levelsGained
+  }
+
+  const increaseStatAllocation = (key: StatKey) => {
+    if (remainingAttributePoints.value <= 0) return
+    statAllocations[key] += 1
+  }
+
+  const decreaseStatAllocation = (key: StatKey) => {
+    if (statAllocations[key] <= 0) return
+    statAllocations[key] -= 1
+  }
+
+  const applyStatAllocations = () => {
+    const points = allocatedPoints.value
+    if (points <= 0) return
+    Object.entries(statAllocations).forEach(([key, value]) => {
+      if (!value) return
+      const statKey = key as StatKey
+      stats[statKey].value += value
+      stats[statKey].expToNext = computeExpToNext(
+        stats[statKey].baseExpToNext,
+        stats[statKey].value,
+        1.2,
+        15,
+      )
+      statAllocations[statKey] = 0
+    })
+    attributePoints.value -= points
+  }
 
   const maxMana = computed(() => Math.floor(30 + stats.Intelligence.value * 10))
   const manaRegen = computed(() => 1 + stats.Intelligence.value * 0.25)
@@ -313,6 +367,10 @@ export const useGameStore = defineStore('game', () => {
     mana,
     maxMana,
     maxHp,
+    attributePoints,
+    statAllocations,
+    allocatedPoints,
+    remainingAttributePoints,
     statList,
     skillList,
     currentZone,
@@ -320,6 +378,7 @@ export const useGameStore = defineStore('game', () => {
     currencyBreakdown,
     progressPercent,
     addCurrency,
+    addCharacterExp,
     spendMana,
     toggleCombat,
     toggleResting,
@@ -334,6 +393,9 @@ export const useGameStore = defineStore('game', () => {
     clearProfessionLogs,
     addActionLog,
     clearActionLogs,
+    increaseStatAllocation,
+    decreaseStatAllocation,
+    applyStatAllocations,
     startTicker,
     stopTicker,
   }

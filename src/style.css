@@ -332,6 +332,18 @@ button:disabled {
   min-width: 120px;
 }
 
+.stat-controls {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.stat-controls .ghost {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
+  border-radius: 10px;
+}
+
 .item-hint {
   font-size: 0.75rem;
   color: #7d90b8;

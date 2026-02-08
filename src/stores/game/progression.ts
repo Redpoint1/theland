@@ -92,15 +92,14 @@ export const useProgressionLogic = ({
   const addCharacterExp = (amount: number) => {
     const bonus = skillBonuses.value.expMultiplier
     character.exp += Math.floor(amount * bonus)
+    let levelsGained = 0
     while (character.exp >= character.expToNext) {
       character.exp -= character.expToNext
       character.level += 1
+      levelsGained += 1
       character.expToNext = characterExpToNext(character.level)
-      statList.value.forEach((stat) => {
-        stat.value += 1
-        stat.expToNext = statExpToNext(stat)
-      })
     }
+    return levelsGained
   }
 
   const addStatExp = (key: StatKey, amount: number) => {

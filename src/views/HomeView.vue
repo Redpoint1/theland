@@ -20,6 +20,9 @@ const {
   maxMana,
   maxHp,
   statList,
+  statAllocations,
+  remainingAttributePoints,
+  allocatedPoints,
   skillList,
   actions,
   activeTask,
@@ -28,7 +31,7 @@ const {
   idleActionJustCompleted,
   actionLogs,
 } = storeToRefs(game)
-const { actionDurationMs } = game
+const { actionDurationMs, increaseStatAllocation, decreaseStatAllocation, applyStatAllocations } = game
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`
 
@@ -127,8 +130,28 @@ const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
 
       <div class="panel">
         <h2>Stats</h2>
+        <div class="row" v-if="remainingAttributePoints > 0 || allocatedPoints > 0">
+          <div>
+            <div class="label">Attribute Points</div>
+            <div class="value">{{ remainingAttributePoints }}</div>
+          </div>
+          <div class="hero-actions">
+            <button class="ghost" :disabled="allocatedPoints === 0" @click="applyStatAllocations">
+              Apply
+            </button>
+          </div>
+        </div>
         <div class="list">
-          <StatCard v-for="stat in statList" :key="stat.name" :stat="stat" />
+          <StatCard
+            v-for="stat in statList"
+            :key="stat.name"
+            :stat="stat"
+            :pending="statAllocations[stat.name]"
+            :can-increase="remainingAttributePoints > 0"
+            :can-decrease="statAllocations[stat.name] > 0"
+            :on-increase="() => increaseStatAllocation(stat.name)"
+            :on-decrease="() => decreaseStatAllocation(stat.name)"
+          />
         </div>
       </div>
 
