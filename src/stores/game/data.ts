@@ -15,35 +15,35 @@ import type {
 export const createStats = (): Record<StatKey, Stat> => ({
   Strength: {
     name: 'Strength',
-    value: 8,
+    value: 5,
     exp: 0,
-    expToNext: 90,
+    expToNext: 100,
     description: 'Power, lifting, melee force.',
   },
   Agility: {
     name: 'Agility',
-    value: 7,
+    value: 5,
     exp: 0,
-    expToNext: 90,
+    expToNext: 100,
     description: 'Speed, reflexes, dexterity.',
   },
   Vitality: {
     name: 'Vitality',
-    value: 9,
+    value: 5,
     exp: 0,
-    expToNext: 95,
+    expToNext: 100,
     description: 'Health, stamina, endurance.',
   },
   Spirit: {
     name: 'Spirit',
-    value: 6,
+    value: 5,
     exp: 0,
     expToNext: 100,
     description: 'Mana, willpower, recovery.',
   },
   Intelligence: {
     name: 'Intelligence',
-    value: 7,
+    value: 5,
     exp: 0,
     expToNext: 100,
     description: 'Knowledge, crafting, tactics.',
@@ -55,35 +55,35 @@ export const createSkills = (): Record<SkillKey, Skill> => ({
     name: 'Combat',
     level: 0,
     exp: 0,
-    expToNext: 60,
+    expToNext: 100,
     description: 'Weapon handling and battle instincts.',
   },
   Survival: {
     name: 'Survival',
     level: 0,
     exp: 0,
-    expToNext: 55,
+    expToNext: 100,
     description: 'Tracking, foraging, fieldcraft.',
   },
   Harvesting: {
     name: 'Harvesting',
     level: 0,
     exp: 0,
-    expToNext: 50,
+    expToNext: 100,
     description: 'Gathering resources and loot.',
   },
   Crafting: {
     name: 'Crafting',
     level: 0,
     exp: 0,
-    expToNext: 65,
+    expToNext: 100,
     description: 'Making gear and supplies.',
   },
   Arcana: {
     name: 'Arcana',
     level: 0,
     exp: 0,
-    expToNext: 70,
+    expToNext: 100,
     description: 'Mana control and spellwork.',
   },
 })
@@ -93,7 +93,7 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     name: 'Mining',
     level: 0,
     exp: 0,
-    expToNext: 50,
+    expToNext: 100,
     description: 'Extract ore and crystals from the Land.',
     bonusLabel: 'Yield bonus',
     bonusPerLevel: 0.03,
@@ -102,7 +102,7 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     name: 'Herbalism',
     level: 0,
     exp: 0,
-    expToNext: 50,
+    expToNext: 100,
     description: 'Gather rare herbs and reagents.',
     bonusLabel: 'Yield bonus',
     bonusPerLevel: 0.03,
@@ -111,7 +111,7 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     name: 'Smelting',
     level: 0,
     exp: 0,
-    expToNext: 60,
+    expToNext: 100,
     description: 'Refine ores into usable ingots.',
     bonusLabel: 'Output bonus',
     bonusPerLevel: 0.02,
@@ -120,7 +120,7 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     name: 'Alchemy',
     level: 0,
     exp: 0,
-    expToNext: 60,
+    expToNext: 100,
     description: 'Brew tonics and mana infusions.',
     bonusLabel: 'Potency bonus',
     bonusPerLevel: 0.02,
@@ -239,7 +239,6 @@ export const createActions = (): ActionItem[] => [
       exp: 5,
       stats: { Strength: 7, Vitality: 3 },
       skills: { Combat: 3 },
-      currency: { copper: 2 },
     },
   },
   {
@@ -251,7 +250,6 @@ export const createActions = (): ActionItem[] => [
       exp: 4,
       stats: { Agility: 6, Vitality: 2 },
       skills: { Survival: 3 },
-      currency: { copper: 1 },
     },
   },
   {
@@ -272,9 +270,8 @@ export const createActions = (): ActionItem[] => [
     active: false,
     gains: {
       exp: 2,
-      stats: { Agility: 2, Intelligence: 2 },
+      stats: { Agility: 1, Intelligence: 2 },
       skills: { Harvesting: 5 },
-      currency: { copper: 6 },
     },
   },
   {
@@ -286,7 +283,6 @@ export const createActions = (): ActionItem[] => [
       exp: 3,
       stats: { Intelligence: 5 },
       skills: { Crafting: 5 },
-      currency: { copper: 8 },
     },
   },
 ]
@@ -300,7 +296,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     subtype: 'Foraging',
     description: 'A fragrant herb used in basic potions.',
     maxStack: 50,
-    priceCopper: 3,
+    priceCopper: 1,
   },
   'goblin-ear': {
     id: 'goblin-ear',
@@ -310,7 +306,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     subtype: 'Trophy',
     description: 'Proof of a goblin raid defeated.',
     maxStack: 20,
-    priceCopper: 8,
+    priceCopper: 5,
   },
   'iron-ore': {
     id: 'iron-ore',
@@ -319,8 +315,8 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Resource',
     subtype: 'Mining',
     description: 'Raw ore ready for smelting.',
-    maxStack: 40,
-    priceCopper: 6,
+    maxStack: 50,
+    priceCopper: 1,
   },
   'mana-crystal': {
     id: 'mana-crystal',
@@ -330,7 +326,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     subtype: 'Arcana',
     description: 'A crystal infused with condensed mana.',
     maxStack: 10,
-    priceCopper: 45,
+    priceCopper: 5,
   },
   'leather-helm': {
     id: 'leather-helm',
@@ -349,8 +345,8 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Resource',
     subtype: 'Smelting',
     description: 'Refined metal ready for crafting.',
-    maxStack: 30,
-    priceCopper: 16,
+    maxStack: 50,
+    priceCopper: 5,
   },
   'minor-elixir': {
     id: 'minor-elixir',
@@ -365,11 +361,9 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
 })
 
 export const seedInventoryItems: SeedItem[] = [
-  { itemId: 'mist-herb', amount: 12 },
-  { itemId: 'goblin-ear', amount: 3 },
-  { itemId: 'iron-ore', amount: 18 },
+  { itemId: 'mist-herb', amount: 5 },
+  { itemId: 'iron-ore', amount: 5 },
   { itemId: 'mana-crystal', amount: 2 },
-  { itemId: 'leather-helm', amount: 1 },
 ]
 
 export const createZones = (): Zone[] => [
