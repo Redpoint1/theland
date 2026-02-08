@@ -50,6 +50,7 @@ export interface ActionItem {
   id: string
   name: string
   description: string
+  manaCost?: number
   gains: ActionGain
 }
 

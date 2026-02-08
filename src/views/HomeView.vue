@@ -16,6 +16,8 @@ const {
   character,
   currencyBreakdown,
   playerHp,
+  mana,
+  maxMana,
   maxHp,
   statList,
   skillList,
@@ -101,6 +103,11 @@ const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
           <div class="label">Health</div>
           <div class="value">{{ playerHp }} / {{ maxHp }}</div>
           <ProgressBar :value="playerHp" :max="maxHp" variant="hp" />
+        </div>
+        <div class="hp-block">
+          <div class="label">Mana</div>
+          <div class="value">{{ mana }} / {{ maxMana }}</div>
+          <ProgressBar :value="mana" :max="maxMana" />
         </div>
         <div class="currency">
           <div>

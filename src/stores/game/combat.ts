@@ -44,6 +44,7 @@ export interface CombatLogicDeps {
   addCurrency: (copperGain?: number) => void
   addSkillExp: (key: SkillKey, amount: number) => void
   addStatExp: (key: StatKey, amount: number) => void
+  spendMana: (amount: number) => boolean
   deactivateActions: () => void
   deactivateProfessionActions: () => void
 }
@@ -65,6 +66,7 @@ export const useCombatLogic = ({
   addCurrency,
   addSkillExp,
   addStatExp,
+  spendMana,
   deactivateActions,
   deactivateProfessionActions,
 }: CombatLogicDeps) => {
@@ -109,6 +111,22 @@ export const useCombatLogic = ({
       'combat',
       `Encountered ${combat.enemyName} (Lv. ${combat.enemyLevel}) in ${zone.name}.`,
     )
+  }
+
+  const handleEnemyDefeated = () => {
+    const rewardSummary = `+${combatRewards.exp} XP, +${combatRewards.copper}c`
+    addCombatLog(
+      'kill',
+      `Defeated ${combat.enemyName} (Lv. ${combat.enemyLevel}). Rewards: ${rewardSummary}.`,
+    )
+    addCharacterExp(combatRewards.exp)
+    addCurrency(combatRewards.copper)
+    addSkillExp('Combat', combatRewards.skillExp)
+    addSkillExp('Survival', Math.floor(combatRewards.skillExp * 0.4))
+    addStatExp('Strength', combatRewards.statExp)
+    addStatExp('Agility', combatRewards.statExp)
+    addStatExp('Vitality', combatRewards.statExp)
+    spawnEnemy()
   }
 
   const setZone = (zoneId: string) => {
@@ -165,19 +183,7 @@ export const useCombatLogic = ({
     addCombatLog('damage', `You hit ${combat.enemyName} for ${playerDamage} damage.`)
 
     if (combat.enemyHp === 0) {
-      const rewardSummary = `+${combatRewards.exp} XP, +${combatRewards.copper}c`
-      addCombatLog(
-        'kill',
-        `Defeated ${combat.enemyName} (Lv. ${combat.enemyLevel}). Rewards: ${rewardSummary}.`,
-      )
-      addCharacterExp(combatRewards.exp)
-      addCurrency(combatRewards.copper)
-      addSkillExp('Combat', combatRewards.skillExp)
-      addSkillExp('Survival', Math.floor(combatRewards.skillExp * 0.4))
-      addStatExp('Strength', combatRewards.statExp)
-      addStatExp('Agility', combatRewards.statExp)
-      addStatExp('Vitality', combatRewards.statExp)
-      spawnEnemy()
+      handleEnemyDefeated()
       return
     }
 
@@ -194,6 +200,26 @@ export const useCombatLogic = ({
     }
   }
 
+  const arcaneBurstCost = 20
+
+  const castArcaneBurst = () => {
+    if (activeTask.value.type !== 'combat') {
+      addCombatLog('system', 'You can only cast this during combat.')
+      return
+    }
+    const spent = spendMana(arcaneBurstCost)
+    if (!spent) {
+      addCombatLog('system', 'Not enough mana for Arcane Burst.')
+      return
+    }
+    const bonusDamage = Math.max(6, Math.floor(stats.Intelligence.value * 1.6 + skills.Arcana.level * 3))
+    combat.enemyHp = Math.max(0, combat.enemyHp - bonusDamage)
+    addCombatLog('damage', `Arcane Burst hits ${combat.enemyName} for ${bonusDamage} damage.`)
+    if (combat.enemyHp === 0) {
+      handleEnemyDefeated()
+    }
+  }
+
   return {
     currentZone,
     maxHp,
@@ -202,5 +228,7 @@ export const useCombatLogic = ({
     toggleCombat,
     toggleResting,
     runCombatTick,
+    castArcaneBurst,
+    arcaneBurstCost,
   }
 }

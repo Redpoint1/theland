@@ -7,6 +7,9 @@ export interface TickerDeps {
   activeTask: Ref<ActiveTask>
   playerHp: Ref<number>
   maxHp: ComputedRef<number>
+  mana: Ref<number>
+  maxMana: ComputedRef<number>
+  manaRegen: ComputedRef<number>
   stats: Record<StatKey, Stat>
   skillBonuses: ComputedRef<SkillBonuses>
   tickMs: number
@@ -22,6 +25,9 @@ export const useTicker = ({
   activeTask,
   playerHp,
   maxHp,
+  mana,
+  maxMana,
+  manaRegen,
   stats,
   skillBonuses,
   tickMs,
@@ -37,6 +43,10 @@ export const useTicker = ({
       playerHp.value = maxHp.value
     }
 
+    if (mana.value > maxMana.value) {
+      mana.value = maxMana.value
+    }
+
     if (activeTask.value.type === 'rest' && playerHp.value < maxHp.value) {
       const regenBase = Math.max(2, Math.floor(stats.Spirit.value * 1.2 + stats.Vitality.value * 0.4))
       const regen = Math.floor(regenBase * skillBonuses.value.regenMultiplier)
@@ -50,6 +60,11 @@ export const useTicker = ({
       const regenBase = Math.max(1, Math.floor(stats.Spirit.value * 0.6))
       const regen = Math.floor(regenBase * skillBonuses.value.regenMultiplier)
       playerHp.value = Math.min(maxHp.value, playerHp.value + regen)
+    }
+
+    if (mana.value < maxMana.value) {
+      const regen = Math.max(1, Math.floor(manaRegen.value))
+      mana.value = Math.min(maxMana.value, mana.value + regen)
     }
 
     runCombatTick()

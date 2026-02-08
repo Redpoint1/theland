@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useGameStore } from '../stores/game'
+import { useGameStore, type ProfessionKey } from '../stores/game'
 import ProfessionCard from '../components/ProfessionCard.vue'
 import LogPanel from '../components/LogPanel.vue'
 
@@ -32,6 +32,31 @@ const professionProgressValue = computed(() =>
   professionActionJustCompleted.value ? actionDurationMs : professionActionProgress.value,
 )
 
+const selectedProfessionKey = ref<ProfessionKey | null>(
+  professionList.value[0]?.name ?? null,
+)
+
+watch(
+  professionList,
+  (list) => {
+    if (!selectedProfessionKey.value && list.length > 0) {
+      const first = list[0]
+      if (first) selectedProfessionKey.value = first.name
+    }
+  },
+  { immediate: true },
+)
+
+const selectedProfession = computed(() =>
+  professionList.value.find((profession) => profession.name === selectedProfessionKey.value) ??
+  professionList.value[0],
+)
+
+const selectedActions = computed(() => {
+  if (!selectedProfession.value) return []
+  return actionsByProfession.value.get(selectedProfession.value.name) ?? []
+})
+
 const activeProfessionActionId = computed(() =>
   activeTask.value.type === 'profession' ? activeTask.value.actionId : undefined,
 )
@@ -55,13 +80,27 @@ const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
     </header>
 
     <section class="grid">
+      <div class="panel">
+        <h2>Choose Profession</h2>
+        <div class="list">
+          <button
+            v-for="profession in professionList"
+            :key="profession.name"
+            class="toggle"
+            :class="{ active: profession.name === selectedProfessionKey }"
+            @click="selectedProfessionKey = profession.name"
+          >
+            {{ profession.name }}
+          </button>
+        </div>
+      </div>
+
       <ProfessionCard
-        v-for="profession in professionList"
-        :key="profession.name"
-        :profession="profession"
-        :actions="actionsByProfession.get(profession.name) ?? []"
+        v-if="selectedProfession"
+        :profession="selectedProfession"
+        :actions="selectedActions"
         :active-action-id="activeProfessionActionId"
-        :bonus-percent="Math.round((professionBonuses[profession.name] - 1) * 100)"
+        :bonus-percent="Math.round((professionBonuses[selectedProfession.name] - 1) * 100)"
         :action-duration-ms="actionDurationMs"
         :progress-value="professionProgressValue"
         :get-item-name="getItemName"

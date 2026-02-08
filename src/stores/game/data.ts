@@ -272,6 +272,17 @@ export const createActions = (): ActionItem[] => [
       skills: { Crafting: 5 },
     },
   },
+  {
+    id: 'arcane-focus',
+    name: 'Arcane Focus',
+    description: 'Shape raw mana into insight and skill.',
+    manaCost: 12,
+    gains: {
+      exp: 3,
+      stats: { Intelligence: 6, Spirit: 2 },
+      skills: { Arcana: 6 },
+    },
+  },
 ]
 
 export const createItemDefs = (): Record<string, ItemDef> => ({

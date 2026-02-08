@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useGameStore, type CombatLogType } from '../stores/game'
+import { useGameStore, type CombatLogEntry, type CombatLogType } from '../stores/game'
 import ProgressBar from '../components/ProgressBar.vue'
 import LogPanel from '../components/LogPanel.vue'
 
@@ -14,11 +14,17 @@ const {
   currentZone,
   playerHp,
   maxHp,
+  mana,
   activeTask,
 } = storeToRefs(game)
 
+const { castArcaneBurst, arcaneBurstCost } = game
+
 const isFighting = computed(() => activeTask.value.type === 'combat')
 const isResting = computed(() => activeTask.value.type === 'rest')
+const canCastArcaneBurst = computed(() =>
+  activeTask.value.type === 'combat' && mana.value >= arcaneBurstCost,
+)
 
 const filters = ref<Record<CombatLogType, boolean>>({
   combat: true,
@@ -37,7 +43,10 @@ const filterOptions: Array<{ id: CombatLogType; label: string }> = [
 ]
 
 const filteredLogs = computed(() =>
-  combatLogs.value.filter((log) => filters.value[log.type]).slice().reverse(),
+  combatLogs.value
+    .filter((log: CombatLogEntry) => filters.value[log.type])
+    .slice()
+    .reverse(),
 )
 </script>
 
@@ -66,6 +75,9 @@ const filteredLogs = computed(() =>
         </div>
         <div class="tick">Health: {{ playerHp }} / {{ maxHp }}</div>
         <ProgressBar :value="playerHp" :max="maxHp" variant="hp" />
+        <button class="ghost" :disabled="!canCastArcaneBurst" @click="castArcaneBurst">
+          Arcane Burst ({{ arcaneBurstCost }} Mana)
+        </button>
       </div>
     </header>
 

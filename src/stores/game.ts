@@ -1,4 +1,4 @@
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { actionDurationMs, tickMs } from './game/constants'
 import {
@@ -112,6 +112,7 @@ export const useGameStore = defineStore('game', () => {
   })
 
   const playerHp = ref(0)
+  const mana = ref(0)
 
   const {
     combatLogs,
@@ -143,6 +144,16 @@ export const useGameStore = defineStore('game', () => {
     skills,
     professions,
   })
+
+  const maxMana = computed(() => Math.floor(30 + stats.Intelligence.value * 10))
+  const manaRegen = computed(() => 1 + stats.Intelligence.value * 0.25)
+
+  const spendMana = (amount: number) => {
+    if (amount <= 0) return true
+    if (mana.value < amount) return false
+    mana.value -= amount
+    return true
+  }
 
   const {
     maxInventorySlots,
@@ -196,6 +207,7 @@ export const useGameStore = defineStore('game', () => {
     addSkillExp,
     addProfessionExp,
     addCurrency,
+    spendMana,
     addActionLog,
     addProfessionLog,
     getItemQuantity,
@@ -212,6 +224,8 @@ export const useGameStore = defineStore('game', () => {
     toggleCombat,
     toggleResting,
     runCombatTick,
+    castArcaneBurst,
+    arcaneBurstCost,
   } = useCombatLogic({
     character,
     stats,
@@ -229,17 +243,22 @@ export const useGameStore = defineStore('game', () => {
     addCurrency,
     addSkillExp,
     addStatExp,
+    spendMana,
     deactivateActions,
     deactivateProfessionActions,
   })
 
   playerHp.value = maxHp.value
+  mana.value = maxMana.value
 
   const { startTicker, stopTicker } = useTicker({
     paused,
     activeTask,
     playerHp,
     maxHp,
+    mana,
+    maxMana,
+    manaRegen,
     stats,
     skillBonuses,
     tickMs,
@@ -290,6 +309,8 @@ export const useGameStore = defineStore('game', () => {
     professionLogs,
     actionLogs,
     playerHp,
+    mana,
+    maxMana,
     maxHp,
     statList,
     skillList,
@@ -298,11 +319,14 @@ export const useGameStore = defineStore('game', () => {
     currencyBreakdown,
     progressPercent,
     addCurrency,
+    spendMana,
     toggleCombat,
     toggleResting,
     toggleAction,
     toggleProfessionAction,
     setZone,
+    castArcaneBurst,
+    arcaneBurstCost,
     addCombatLog,
     clearCombatLogs,
     addProfessionLog,

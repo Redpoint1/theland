@@ -24,6 +24,7 @@ export interface ActionLogicDeps {
   addSkillExp: (key: SkillKey, amount: number) => void
   addProfessionExp: (key: ProfessionKey, amount: number) => void
   addCurrency: (copperGain?: number) => void
+  spendMana: (amount: number) => boolean
   addActionLog: (type: 'action' | 'reward' | 'system', message: string) => void
   addProfessionLog: (type: 'action' | 'reward' | 'system', message: string) => void
   getItemQuantity: (itemId: string) => number
@@ -45,6 +46,7 @@ export const useActionLogic = ({
   addSkillExp,
   addProfessionExp,
   addCurrency,
+  spendMana,
   addActionLog,
   addProfessionLog,
   getItemQuantity,
@@ -188,6 +190,16 @@ export const useActionLogic = ({
     idleActionProgress.value += tickMs
     if (idleActionProgress.value >= actionDurationMs) {
       idleActionProgress.value = actionDurationMs
+      if (active.manaCost && active.manaCost > 0) {
+        const spent = spendMana(active.manaCost)
+        if (!spent) {
+          addActionLog('system', `Not enough mana to complete ${active.name}.`)
+          setActiveTask('none')
+          idleActionProgress.value = 0
+          idleActionJustCompleted.value = false
+          return
+        }
+      }
       applyIdleGains(active)
       addActionLog('reward', `Completed ${active.name}. ${formatActionRewards(active)}.`)
       idleActionJustCompleted.value = true

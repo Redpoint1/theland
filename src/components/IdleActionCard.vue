@@ -33,6 +33,9 @@ const emit = defineEmits<{
       <div class="action-hint">
         Completion: 5s · +{{ props.action.gains.exp ?? 0 }} XP
       </div>
+      <div v-if="props.action.manaCost" class="action-hint">
+        Mana cost: {{ props.action.manaCost }}
+      </div>
       <ProgressBar
         v-if="props.isActive"
         :value="props.progressValue"
