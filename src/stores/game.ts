@@ -67,8 +67,6 @@ export const useGameStore = defineStore('game', () => {
 
   const currency = reactive({
     copper: 25,
-    silver: 0,
-    gold: 0,
   })
 
   const stats = reactive<Record<StatKey, Stat>>(createStats())
@@ -132,6 +130,7 @@ export const useGameStore = defineStore('game', () => {
     skillList,
     professionList,
     skillBonuses,
+    currencyBreakdown,
     addCurrency,
     addCharacterExp,
     addStatExp,
@@ -296,6 +295,7 @@ export const useGameStore = defineStore('game', () => {
     skillList,
     currentZone,
     skillBonuses,
+    currencyBreakdown,
     progressPercent,
     addCurrency,
     toggleCombat,

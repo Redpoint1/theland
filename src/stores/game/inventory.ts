@@ -1,5 +1,4 @@
 import { computed } from 'vue'
-import type { CurrencyState } from './progression'
 import type { InventorySlot, ItemDef, Stat, StatKey } from './types'
 
 export interface InventoryDeps {
@@ -7,7 +6,7 @@ export interface InventoryDeps {
   inventory: InventorySlot[]
   stats: Record<StatKey, Stat>
   baseInventorySlots: number
-  addCurrency: (gain?: Partial<CurrencyState>) => void
+  addCurrency: (copperGain?: number) => void
 }
 
 export const useInventoryLogic = ({
@@ -88,7 +87,7 @@ export const useInventoryLogic = ({
     const sellQty = amount === 'all' ? slot.quantity : Math.min(slot.quantity, amount)
     if (sellQty <= 0) return
     slot.quantity -= sellQty
-    addCurrency({ copper: sellQty * def.priceCopper })
+    addCurrency(sellQty * def.priceCopper)
 
     if (slot.quantity <= 0) {
       const index = inventory.findIndex((entry) => entry.id === slotId)

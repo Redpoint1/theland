@@ -5,7 +5,15 @@ import { RouterLink, RouterView } from 'vue-router'
 import { useGameStore } from './stores/game'
 
 const game = useGameStore()
-const { character, currency, playerHp, maxHp, actions, professionActions, activeTask } = storeToRefs(game)
+const {
+  character,
+  currencyBreakdown,
+  playerHp,
+  maxHp,
+  actions,
+  professionActions,
+  activeTask,
+} = storeToRefs(game)
 
 const activeActionName = computed(() => {
   if (activeTask.value.type === 'idle') {
@@ -52,15 +60,15 @@ onBeforeUnmount(() => {
       </div>
       <div class="hud-item">
         <span class="hud-label">Gold</span>
-        <span class="hud-value">{{ currency.gold }}</span>
+        <span class="hud-value">{{ currencyBreakdown.gold }}</span>
       </div>
       <div class="hud-item">
         <span class="hud-label">Silver</span>
-        <span class="hud-value">{{ currency.silver }}</span>
+        <span class="hud-value">{{ currencyBreakdown.silver }}</span>
       </div>
       <div class="hud-item">
         <span class="hud-label">Copper</span>
-        <span class="hud-value">{{ currency.copper }}</span>
+        <span class="hud-value">{{ currencyBreakdown.copper }}</span>
       </div>
       <div class="hud-item">
         <span class="hud-label">HP</span>

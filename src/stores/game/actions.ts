@@ -1,5 +1,5 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
-import type { CurrencyState, SkillBonuses } from './progression'
+import type { SkillBonuses } from './progression'
 import type {
   ActiveTask,
   ActiveTaskType,
@@ -23,7 +23,7 @@ export interface ActionLogicDeps {
   addStatExp: (key: StatKey, amount: number) => void
   addSkillExp: (key: SkillKey, amount: number) => void
   addProfessionExp: (key: ProfessionKey, amount: number) => void
-  addCurrency: (gain?: Partial<CurrencyState>) => void
+  addCurrency: (copperGain?: number) => void
   addActionLog: (type: 'action' | 'reward' | 'system', message: string) => void
   addProfessionLog: (type: 'action' | 'reward' | 'system', message: string) => void
   getItemQuantity: (itemId: string) => number
@@ -117,12 +117,15 @@ export const useActionLogic = ({
 
     if (action.gains.currency) {
       const bonus = skillBonuses.value.currencyMultiplier
-      const gold = Math.floor((action.gains.currency.gold ?? 0) * bonus)
-      const silver = Math.floor((action.gains.currency.silver ?? 0) * bonus)
-      const copper = Math.floor((action.gains.currency.copper ?? 0) * bonus)
-      if (gold) summary.push(`+${gold}g`)
-      if (silver) summary.push(`+${silver}s`)
-      if (copper) summary.push(`+${copper}c`)
+      const totalCopper = Math.floor(action.gains.currency * bonus)
+      if (totalCopper > 0) {
+        const gold = Math.floor(totalCopper / 10000)
+        const silver = Math.floor((totalCopper % 10000) / 100)
+        const copper = totalCopper % 100
+        if (gold) summary.push(`+${gold}g`)
+        if (silver) summary.push(`+${silver}s`)
+        if (copper || (!gold && !silver)) summary.push(`+${copper}c`)
+      }
     }
 
     return summary.length ? summary.join(', ') : 'no rewards'

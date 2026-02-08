@@ -1,5 +1,5 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
-import type { CurrencyState, SkillBonuses } from './progression'
+import type { SkillBonuses } from './progression'
 import type {
   ActiveTask,
   CombatLogType,
@@ -41,7 +41,7 @@ export interface CombatLogicDeps {
   defaultEnemy: EnemyType
   addCombatLog: (type: CombatLogType, message: string) => void
   addCharacterExp: (amount: number) => void
-  addCurrency: (gain?: Partial<CurrencyState>) => void
+  addCurrency: (copperGain?: number) => void
   addSkillExp: (key: SkillKey, amount: number) => void
   addStatExp: (key: StatKey, amount: number) => void
   deactivateActions: () => void
@@ -171,7 +171,7 @@ export const useCombatLogic = ({
         `Defeated ${combat.enemyName} (Lv. ${combat.enemyLevel}). Rewards: ${rewardSummary}.`,
       )
       addCharacterExp(combatRewards.exp)
-      addCurrency({ copper: combatRewards.copper })
+      addCurrency(combatRewards.copper)
       addSkillExp('Combat', combatRewards.skillExp)
       addSkillExp('Survival', Math.floor(combatRewards.skillExp * 0.4))
       addStatExp('Strength', combatRewards.statExp)

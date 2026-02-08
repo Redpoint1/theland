@@ -10,6 +10,10 @@ import type {
 
 export interface CurrencyState {
   copper: number
+}
+
+export interface CurrencyBreakdown {
+  copper: number
   silver: number
   gold: number
 }
@@ -58,24 +62,18 @@ export const useProgressionLogic = ({
     }
   })
 
-  const normalizeCurrency = () => {
-    if (currency.copper >= 100) {
-      currency.silver += Math.floor(currency.copper / 100)
-      currency.copper = currency.copper % 100
-    }
-    if (currency.silver >= 100) {
-      currency.gold += Math.floor(currency.silver / 100)
-      currency.silver = currency.silver % 100
-    }
-  }
+  const currencyBreakdown = computed<CurrencyBreakdown>(() => {
+    const total = Math.max(0, Math.floor(currency.copper))
+    const gold = Math.floor(total / 10000)
+    const silver = Math.floor((total % 10000) / 100)
+    const copper = total % 100
+    return { gold, silver, copper }
+  })
 
-  const addCurrency = (gain?: Partial<CurrencyState>) => {
-    if (!gain) return
+  const addCurrency = (copperGain = 0) => {
+    if (!copperGain) return
     const bonus = skillBonuses.value.currencyMultiplier
-    currency.copper += Math.floor((gain.copper ?? 0) * bonus)
-    currency.silver += Math.floor((gain.silver ?? 0) * bonus)
-    currency.gold += Math.floor((gain.gold ?? 0) * bonus)
-    normalizeCurrency()
+    currency.copper += Math.floor(copperGain * bonus)
   }
 
   const addCharacterExp = (amount: number) => {
@@ -126,7 +124,7 @@ export const useProgressionLogic = ({
     skillList,
     professionList,
     skillBonuses,
-    normalizeCurrency,
+    currencyBreakdown,
     addCurrency,
     addCharacterExp,
     addStatExp,

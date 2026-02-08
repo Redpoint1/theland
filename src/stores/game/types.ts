@@ -43,7 +43,7 @@ export interface ActionGain {
   exp?: number
   stats?: Partial<Record<StatKey, number>>
   skills?: Partial<Record<SkillKey, number>>
-  currency?: Partial<{ copper: number; silver: number; gold: number }>
+  currency?: number
 }
 
 export interface ActionItem {

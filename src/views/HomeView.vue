@@ -14,7 +14,7 @@ const {
   tickMs,
   paused,
   character,
-  currency,
+  currencyBreakdown,
   playerHp,
   maxHp,
   statList,
@@ -105,15 +105,15 @@ const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
         <div class="currency">
           <div>
             <span class="currency-label">Gold</span>
-            <span class="currency-value">{{ currency.gold }}</span>
+            <span class="currency-value">{{ currencyBreakdown.gold }}</span>
           </div>
           <div>
             <span class="currency-label">Silver</span>
-            <span class="currency-value">{{ currency.silver }}</span>
+            <span class="currency-value">{{ currencyBreakdown.silver }}</span>
           </div>
           <div>
             <span class="currency-label">Copper</span>
-            <span class="currency-value">{{ currency.copper }}</span>
+            <span class="currency-value">{{ currencyBreakdown.copper }}</span>
           </div>
         </div>
       </div>
