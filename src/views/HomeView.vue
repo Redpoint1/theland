@@ -35,6 +35,13 @@ const {
 const { actionDurationMs, increaseStatAllocation, decreaseStatAllocation, applyStatAllocations } = game
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`
+const totalCopper = computed(
+  () =>
+    currencyBreakdown.value.gold * 10000 +
+    currencyBreakdown.value.silver * 100 +
+    currencyBreakdown.value.copper,
+)
+const readableCurrency = computed(() => game.formatCopperToCurrency(totalCopper.value))
 
 const bonusItems = computed(() => [
   {
@@ -193,16 +200,12 @@ const parseActionLog = (log: { message: string; type: string }): ParsedActionLog
         </div>
         <div class="currency">
           <div>
-            <span class="currency-label">Gold</span>
-            <span class="currency-value">{{ currencyBreakdown.gold }}</span>
+            <span class="currency-label">Currency</span>
+            <span class="currency-value">{{ readableCurrency }}</span>
           </div>
           <div>
-            <span class="currency-label">Silver</span>
-            <span class="currency-value">{{ currencyBreakdown.silver }}</span>
-          </div>
-          <div>
-            <span class="currency-label">Copper</span>
-            <span class="currency-value">{{ currencyBreakdown.copper }}</span>
+            <span class="currency-label">Total Copper</span>
+            <span class="currency-value">{{ totalCopper }}</span>
           </div>
         </div>
       </div>

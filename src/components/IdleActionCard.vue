@@ -2,6 +2,7 @@
 import type { ActionItem } from '../stores/game'
 import ProgressBar from './ProgressBar.vue'
 import InfoTooltip from './InfoTooltip.vue'
+import { formatCopperToCurrency } from '../stores/game/progression'
 
 const props = defineProps<{
   action: ActionItem
@@ -46,7 +47,7 @@ const describeEntries = (entries?: Record<string, number>) =>
             Skill XP · {{ entry }}
           </div>
           <div v-if="props.action.gains.currency" class="info-tooltip-line info-tooltip-muted">
-            Currency reward: +{{ props.action.gains.currency }}c (before multipliers)
+            Currency reward: +{{ formatCopperToCurrency(props.action.gains.currency) }} (before multipliers)
           </div>
           <div v-if="props.action.manaCost" class="info-tooltip-line info-tooltip-muted">
             Mana cost: {{ props.action.manaCost }} per completion

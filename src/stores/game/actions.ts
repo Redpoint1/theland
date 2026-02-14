@@ -1,5 +1,5 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
-import type { SkillBonuses } from './progression'
+import { formatCopperToCurrency, type SkillBonuses } from './progression'
 import type {
   ActiveTask,
   ActiveTaskType,
@@ -121,12 +121,7 @@ export const useActionLogic = ({
       const bonus = skillBonuses.value.currencyMultiplier
       const totalCopper = Math.floor(action.gains.currency * bonus)
       if (totalCopper > 0) {
-        const gold = Math.floor(totalCopper / 10000)
-        const silver = Math.floor((totalCopper % 10000) / 100)
-        const copper = totalCopper % 100
-        if (gold) summary.push(`+${gold}g`)
-        if (silver) summary.push(`+${silver}s`)
-        if (copper || (!gold && !silver)) summary.push(`+${copper}c`)
+        summary.push(`+${formatCopperToCurrency(totalCopper)}`)
       }
     }
 

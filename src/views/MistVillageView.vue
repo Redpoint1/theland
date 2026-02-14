@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/game'
 
 type VillageAreaId =
@@ -55,7 +54,6 @@ interface Decree {
 }
 
 const game = useGameStore()
-const { currencyBreakdown } = storeToRefs(game)
 
 const areas: VillageArea[] = [
   {
@@ -220,12 +218,8 @@ onBeforeUnmount(() => {
   if (timerHandle) clearInterval(timerHandle)
 })
 
-const totalCopper = computed(
-  () =>
-    currencyBreakdown.value.gold * 10000 +
-    currencyBreakdown.value.silver * 100 +
-    currencyBreakdown.value.copper,
-)
+const totalCopper = computed(() => Math.max(0, Math.floor(game.currency.copper)))
+const formatCurrency = (copper: number) => game.formatCopperToCurrency(copper)
 
 const dispatchSecondsLeft = computed(() =>
   Math.max(0, Math.ceil((dispatchReadyAt.value - now.value) / 1000)),
@@ -276,7 +270,7 @@ const fulfillContract = (contract: RequestContract) => {
   game.addCharacterExp(contract.rewardExp)
   reputation.value += contract.reputation
   addVillageLog(
-    `Completed ${contract.title}: +${contract.rewardCopper}c, +${contract.rewardExp} XP, +${contract.reputation} reputation.`,
+    `Completed ${contract.title}: +${formatCurrency(contract.rewardCopper)}, +${contract.rewardExp} XP, +${contract.reputation} reputation.`,
   )
 }
 
@@ -356,9 +350,7 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
         </p>
       </div>
       <div class="hero-actions">
-        <div class="tick">
-          Coin: {{ currencyBreakdown.gold }}g {{ currencyBreakdown.silver }}s {{ currencyBreakdown.copper }}c
-        </div>
+        <div class="tick">Coin: {{ formatCurrency(totalCopper) }}</div>
         <div class="tick">Village Reputation: {{ reputation }}</div>
       </div>
     </header>
@@ -392,7 +384,7 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
                 <div class="item-hint">
                   Cost:
                   <span class="reward-chip" :class="{ missing: totalCopper < bundle.costCopper }">
-                    {{ bundle.costCopper }}c / {{ totalCopper }}c
+                    {{ formatCurrency(bundle.costCopper) }} / {{ formatCurrency(totalCopper) }}
                   </span>
                 </div>
                 <div class="item-hint">
@@ -407,7 +399,7 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
                 </div>
               </div>
               <button class="toggle" :disabled="!canAffordBundle(bundle)" @click="buyBundle(bundle)">
-                Buy ({{ bundle.costCopper }}c)
+                Buy ({{ formatCurrency(bundle.costCopper) }})
               </button>
             </div>
           </div>
@@ -433,7 +425,10 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
                 </div>
                 <div class="item-hint">
                   Rewards:
-                  <span class="reward-chip">+{{ contract.rewardCopper }}c ({{ totalCopper + contract.rewardCopper }}c)</span>
+                  <span class="reward-chip"
+                    >+{{ formatCurrency(contract.rewardCopper) }}
+                    ({{ formatCurrency(totalCopper + contract.rewardCopper) }})</span
+                  >
                   <span class="reward-chip">+{{ contract.rewardExp }} XP</span>
                   <span class="reward-chip">+{{ contract.reputation }} rep</span>
                 </div>
@@ -464,7 +459,10 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
                 </div>
                 <div class="item-hint">
                   Outputs:
-                  <span v-if="attunement.rewardCopper" class="reward-chip">+{{ attunement.rewardCopper }}c ({{ totalCopper + attunement.rewardCopper }}c)</span>
+                  <span v-if="attunement.rewardCopper" class="reward-chip"
+                    >+{{ formatCurrency(attunement.rewardCopper) }}
+                    ({{ formatCurrency(totalCopper + attunement.rewardCopper) }})</span
+                  >
                   <span v-if="attunement.rewardExp" class="reward-chip">+{{ attunement.rewardExp }} XP</span>
                   <span
                     v-for="reward in attunement.rewardItems ?? []"
@@ -517,7 +515,10 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
                 </div>
                 <div class="item-hint">
                   Rewards:
-                  <span v-if="decree.rewardCopper" class="reward-chip">+{{ decree.rewardCopper }}c ({{ totalCopper + decree.rewardCopper }}c)</span>
+                  <span v-if="decree.rewardCopper" class="reward-chip"
+                    >+{{ formatCurrency(decree.rewardCopper) }}
+                    ({{ formatCurrency(totalCopper + decree.rewardCopper) }})</span
+                  >
                   <span v-if="decree.rewardExp" class="reward-chip">+{{ decree.rewardExp }} XP</span>
                   <span
                     v-for="reward in decree.rewardItems ?? []"

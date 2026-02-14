@@ -1,4 +1,5 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
+import { formatCopperToCurrency } from './progression'
 import type { SkillBonuses } from './progression'
 import type {
   ActiveTask,
@@ -114,7 +115,7 @@ export const useCombatLogic = ({
   }
 
   const handleEnemyDefeated = () => {
-    const rewardSummary = `+${combatRewards.exp} XP, +${combatRewards.copper}c`
+    const rewardSummary = `+${combatRewards.exp} XP, +${formatCopperToCurrency(combatRewards.copper)}`
     addCombatLog(
       'kill',
       `Defeated ${combat.enemyName} (Lv. ${combat.enemyLevel}). Rewards: ${rewardSummary}.`,

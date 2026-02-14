@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { InventorySlot, ItemDef } from '../stores/game'
 import InfoTooltip from './InfoTooltip.vue'
+import { formatCopperToCurrency } from '../stores/game/progression'
 
 const props = defineProps<{
   slot: InventorySlot
@@ -37,7 +38,7 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
               <div v-if="itemDef.effectDescription" class="info-tooltip-line">Effect: {{ itemDef.effectDescription }}</div>
               <div class="info-tooltip-line info-tooltip-muted">Type: {{ itemDef.type }} · {{ itemDef.subtype }}</div>
               <div class="info-tooltip-line info-tooltip-muted">Quality: {{ itemDef.quality }}</div>
-              <div class="info-tooltip-line info-tooltip-muted">Value: {{ itemDef.priceCopper }}c</div>
+              <div class="info-tooltip-line info-tooltip-muted">Value: {{ formatCopperToCurrency(itemDef.priceCopper) }}</div>
               <div class="info-tooltip-line info-tooltip-muted">Stack: {{ itemDef.maxStack }}</div>
               <div class="info-tooltip-line info-tooltip-muted">Owned in slot: {{ slot.quantity }}</div>
             </template>
@@ -48,7 +49,7 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
       </div>
       <div class="inventory-meta">
         <div class="inventory-quality">{{ itemDef.quality }}</div>
-        <div class="inventory-price">{{ itemDef.priceCopper }}c</div>
+        <div class="inventory-price">{{ formatCopperToCurrency(itemDef.priceCopper) }}</div>
       </div>
       <div class="inventory-actions">
         <button class="toggle" :disabled="!canUse" @click="emit('use', slot.id)">Use</button>

@@ -19,12 +19,29 @@ export interface CurrencyBreakdown {
   gold: number
 }
 
-export const formatCopperToCurrency = (totalCopper: number) => {
+export interface CurrencyFormatOptions {
+  showAllUnits?: boolean
+}
+
+export const formatCopperToCurrency = (
+  totalCopper: number,
+  options: CurrencyFormatOptions = {},
+) => {
+  const { showAllUnits = false } = options
   const normalized = Math.max(0, Math.floor(totalCopper))
   const gold = Math.floor(normalized / 10000)
   const silver = Math.floor((normalized % 10000) / 100)
   const copper = normalized % 100
-  return `${gold}g ${silver}s ${copper}c`
+
+  if (showAllUnits) {
+    return `${gold}g ${silver}s ${copper}c`
+  }
+
+  const parts: string[] = []
+  if (gold > 0) parts.push(`${gold}g`)
+  if (silver > 0) parts.push(`${silver}s`)
+  parts.push(`${copper}c`)
+  return parts.join(' ')
 }
 
 export interface CharacterState {

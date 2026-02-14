@@ -60,6 +60,8 @@ const zoneEnemySummary = (zoneId: string) => {
   return zone.enemies.map((enemy) => enemy.name)
 }
 
+const formatCurrency = (copper: number) => game.formatCopperToCurrency(copper)
+
 const formatPercent = (value: number) => `${Math.round(value * 10000) / 100}%`
 
 interface ParsedCombatLog {
@@ -73,18 +75,18 @@ interface ParsedCombatLog {
 const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
   const message = log.message
 
-  const defeated = message.match(/^Defeated (.+) \(Lv\. (\d+)\)\. Rewards: \+(\d+) XP, \+(\d+)c\.$/)
+  const defeated = message.match(/^Defeated (.+) \(Lv\. (\d+)\)\. Rewards: \+(\d+) XP, \+(.+)\.$/)
   if (defeated) {
-    const [, enemyName, levelText, xpText, copperText] = defeated
+    const [, enemyName, levelText, xpText, currencyText] = defeated
     return {
       before: 'Defeated ',
       focus: enemyName,
-      after: ` (Lv. ${levelText}). Rewards: +${xpText} XP, +${copperText}c.`,
+      after: ` (Lv. ${levelText}). Rewards: +${xpText} XP, +${currencyText}.`,
       tooltipTitle: `${enemyName} Defeated`,
       tooltipLines: [
         `Enemy level: ${levelText}`,
         `Character XP reward: +${xpText}`,
-        `Copper reward: +${copperText}c`,
+        `Currency reward: +${currencyText}`,
         'Combat XP and stat XP are also awarded from zone scaling.',
       ],
     }
@@ -224,7 +226,7 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
                 <div class="info-tooltip-line">Level Range: {{ zone.levelMin }}-{{ zone.levelMax }}</div>
                 <div class="info-tooltip-line">Base Power: {{ zone.basePower }}</div>
                 <div class="info-tooltip-line">Base Reward XP: {{ zone.baseRewards.exp }}</div>
-                <div class="info-tooltip-line">Base Reward Copper: {{ zone.baseRewards.copper }}c</div>
+                <div class="info-tooltip-line">Base Reward Currency: {{ formatCurrency(zone.baseRewards.copper) }}</div>
                 <div class="info-tooltip-line">Base Combat XP: {{ zone.baseRewards.skillExp }}</div>
                 <div class="info-tooltip-line info-tooltip-muted">Enemies:</div>
                 <div
@@ -270,14 +272,14 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
           <InfoTooltip>
             <template #trigger>
               <div class="reward-hint">
-                Rewards: +{{ combatRewards.exp }} XP, +{{ combatRewards.copper }}c,
+                Rewards: +{{ combatRewards.exp }} XP, +{{ formatCurrency(combatRewards.copper) }},
                 +{{ combatRewards.skillExp }} Combat XP / kill
               </div>
             </template>
             <template #content>
               <div class="info-tooltip-title">Current Enemy Rewards</div>
               <div class="info-tooltip-line">Character XP: +{{ combatRewards.exp }}</div>
-              <div class="info-tooltip-line">Currency: +{{ combatRewards.copper }}c</div>
+              <div class="info-tooltip-line">Currency: +{{ formatCurrency(combatRewards.copper) }}</div>
               <div class="info-tooltip-line">Combat Skill XP: +{{ combatRewards.skillExp }}</div>
               <div class="info-tooltip-line">Stat XP per stat: +{{ combatRewards.statExp }}</div>
             </template>
