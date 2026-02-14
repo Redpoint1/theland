@@ -89,6 +89,14 @@ export const useProgressionLogic = ({
     currency.copper += Math.floor(copperGain * bonus)
   }
 
+  const spendCurrency = (copperCost = 0) => {
+    const cost = Math.max(0, Math.floor(copperCost))
+    if (cost <= 0) return true
+    if (currency.copper < cost) return false
+    currency.copper -= cost
+    return true
+  }
+
   const addCharacterExp = (amount: number) => {
     const bonus = skillBonuses.value.expMultiplier
     character.exp += Math.floor(amount * bonus)
@@ -139,6 +147,7 @@ export const useProgressionLogic = ({
     skillBonuses,
     currencyBreakdown,
     addCurrency,
+    spendCurrency,
     addCharacterExp,
     addStatExp,
     addSkillExp,

@@ -715,6 +715,33 @@ button:disabled {
   font-size: 0.85rem;
 }
 
+.village-grid {
+  grid-template-columns: 1.1fr 1.4fr 0.9fr;
+}
+
+.village-area-content {
+  gap: 1rem;
+}
+
+.village-shop-list,
+.village-sell-list,
+.village-shrine-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.village-shop-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.8rem;
+  border-radius: 14px;
+  background: rgba(21, 30, 47, 0.75);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
 @media (max-width: 720px) {
   .hero {
     flex-direction: column;
@@ -757,5 +784,14 @@ button:disabled {
 
   .log-row {
     grid-template-columns: 1fr;
+  }
+
+  .village-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .village-shop-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

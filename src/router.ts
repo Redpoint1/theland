@@ -3,6 +3,7 @@ import HomeView from './views/HomeView.vue'
 import CombatView from './views/CombatView.vue'
 import InventoryView from './views/InventoryView.vue'
 import ProfessionsView from './views/ProfessionsView.vue'
+import MistVillageView from './views/MistVillageView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -26,6 +27,11 @@ const router = createRouter({
       path: '/professions',
       name: 'professions',
       component: ProfessionsView,
+    },
+    {
+      path: '/mist-village',
+      name: 'mist-village',
+      component: MistVillageView,
     },
   ],
 })

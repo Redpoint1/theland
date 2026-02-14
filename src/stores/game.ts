@@ -45,6 +45,7 @@ export type {
   EnemyType,
   InventorySlot,
   ItemDef,
+  ItemQuality,
   Profession,
   ProfessionAction,
   ProfessionKey,
@@ -135,6 +136,7 @@ export const useGameStore = defineStore('game', () => {
     skillBonuses,
     currencyBreakdown,
     addCurrency,
+    spendCurrency,
     addCharacterExp: addCharacterExpCore,
     addStatExp,
     addSkillExp,
@@ -215,6 +217,7 @@ export const useGameStore = defineStore('game', () => {
     inventorySlots,
     usedInventorySlots,
     addItem,
+    buyItem,
     removeItem,
     getItemQuantity,
     sellFromSlot,
@@ -225,6 +228,8 @@ export const useGameStore = defineStore('game', () => {
     stats,
     baseInventorySlots,
     addCurrency,
+    spendCurrency,
+    getCurrencyCopper: () => currency.copper,
   })
 
   const seedInventory = () => {
@@ -353,6 +358,7 @@ export const useGameStore = defineStore('game', () => {
     usedInventorySlots,
     maxInventorySlots,
     addItem,
+    buyItem,
     removeItem,
     getItemQuantity,
     sellFromSlot,
@@ -378,6 +384,7 @@ export const useGameStore = defineStore('game', () => {
     currencyBreakdown,
     progressPercent,
     addCurrency,
+    spendCurrency,
     addCharacterExp,
     spendMana,
     toggleCombat,

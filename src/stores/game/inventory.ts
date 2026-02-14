@@ -7,6 +7,8 @@ export interface InventoryDeps {
   stats: Record<StatKey, Stat>
   baseInventorySlots: number
   addCurrency: (copperGain?: number) => void
+  spendCurrency: (copperCost?: number) => boolean
+  getCurrencyCopper: () => number
 }
 
 export const useInventoryLogic = ({
@@ -15,6 +17,8 @@ export const useInventoryLogic = ({
   stats,
   baseInventorySlots,
   addCurrency,
+  spendCurrency,
+  getCurrencyCopper,
 }: InventoryDeps) => {
   let inventorySlotId = 0
 
@@ -54,11 +58,29 @@ export const useInventoryLogic = ({
     return remaining <= 0
   }
 
+  const getAddableAmount = (itemId: string, amount: number) => {
+    const def = getItemDef(itemId)
+    if (!def || amount <= 0) return 0
+
+    const stackSpace = inventory
+      .filter((slot) => slot.itemId === itemId)
+      .reduce((total, slot) => total + Math.max(0, def.maxStack - slot.quantity), 0)
+
+    const remainingAfterStacks = Math.max(0, amount - stackSpace)
+    if (remainingAfterStacks <= 0) return amount
+
+    const emptySlots = Math.max(0, maxInventorySlots.value - inventory.length)
+    const newSlotCapacity = emptySlots * def.maxStack
+    const addableFromNewSlots = Math.min(remainingAfterStacks, newSlotCapacity)
+    return amount - (remainingAfterStacks - addableFromNewSlots)
+  }
+
   const addItem = (itemId: string, amount: number) => {
     const def = getItemDef(itemId)
-    if (!def) return
+    if (!def || amount <= 0) return 0
 
     let remaining = amount
+    let added = 0
     while (remaining > 0) {
       let slot =
         def.maxStack > 1
@@ -66,7 +88,7 @@ export const useInventoryLogic = ({
           : undefined
 
       if (!slot) {
-        if (inventory.length >= maxInventorySlots.value) return
+        if (inventory.length >= maxInventorySlots.value) return added
         slot = createSlot(itemId, 0)
         inventory.push(slot)
       }
@@ -75,7 +97,25 @@ export const useInventoryLogic = ({
       const addNow = Math.min(space, remaining)
       slot.quantity += addNow
       remaining -= addNow
+      added += addNow
     }
+
+    return added
+  }
+
+  const buyItem = (itemId: string, amount: number) => {
+    const def = getItemDef(itemId)
+    if (!def || amount <= 0) return 0
+
+    const affordable = Math.floor(getCurrencyCopper() / def.priceCopper)
+    const addable = getAddableAmount(itemId, amount)
+    const purchaseQty = Math.min(amount, affordable, addable)
+    if (purchaseQty <= 0) return 0
+
+    const totalCost = purchaseQty * def.priceCopper
+    if (!spendCurrency(totalCost)) return 0
+
+    return addItem(itemId, purchaseQty)
   }
 
   const sellFromSlot = (slotId: number, amount: number | 'all') => {
@@ -111,6 +151,7 @@ export const useInventoryLogic = ({
     inventorySlots,
     usedInventorySlots,
     addItem,
+    buyItem,
     removeItem,
     getItemQuantity,
     sellFromSlot,

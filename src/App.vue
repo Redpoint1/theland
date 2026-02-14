@@ -48,6 +48,7 @@ onBeforeUnmount(() => {
       <div class="brand">The Land: Idle Seeds</div>
       <div class="nav-links">
         <RouterLink to="/" class="nav-link">Sanctum</RouterLink>
+        <RouterLink to="/mist-village" class="nav-link">Mist Village</RouterLink>
         <RouterLink to="/combat" class="nav-link">Fighting Grounds</RouterLink>
         <RouterLink to="/inventory" class="nav-link">Inventory</RouterLink>
         <RouterLink to="/professions" class="nav-link">Professions</RouterLink>
