@@ -247,6 +247,14 @@ const itemName = (itemId: string) => game.getItemDef(itemId)?.name ?? itemId
 const formatItems = (items: Array<{ itemId: string; amount: number }>) =>
   items.map((entry) => `${itemName(entry.itemId)} x${entry.amount}`).join(', ')
 
+const formatRequirement = (itemId: string, amount: number) =>
+  `${itemName(itemId)} x${amount} (${game.getItemQuantity(itemId)})`
+
+const hasRequirement = (itemId: string, amount: number) => game.getItemQuantity(itemId) >= amount
+
+const formatRewardItem = (itemId: string, amount: number) =>
+  `${itemName(itemId)} x${amount} (${game.getItemQuantity(itemId)})`
+
 const canAffordBundle = (bundle: BarterBundle) => totalCopper.value >= bundle.costCopper
 
 const buyBundle = (bundle: BarterBundle) => {
@@ -381,7 +389,22 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
               <div>
                 <div class="item-title">{{ bundle.name }}</div>
                 <div class="item-desc">{{ bundle.description }}</div>
-                <div class="item-hint">Rewards: {{ formatItems(bundle.rewards) }}</div>
+                <div class="item-hint">
+                  Cost:
+                  <span class="reward-chip" :class="{ missing: totalCopper < bundle.costCopper }">
+                    {{ bundle.costCopper }}c / {{ totalCopper }}c
+                  </span>
+                </div>
+                <div class="item-hint">
+                  Rewards:
+                  <span
+                    v-for="reward in bundle.rewards"
+                    :key="`${bundle.id}-${reward.itemId}`"
+                    class="reward-chip"
+                  >
+                    {{ formatRewardItem(reward.itemId, reward.amount) }}
+                  </span>
+                </div>
               </div>
               <button class="toggle" :disabled="!canAffordBundle(bundle)" @click="buyBundle(bundle)">
                 Buy ({{ bundle.costCopper }}c)
@@ -397,9 +420,22 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
             <div v-for="contract in contracts" :key="contract.id" class="profession-action">
               <div>
                 <div class="item-title">{{ contract.title }}</div>
-                <div class="item-hint">Needs: {{ formatItems(contract.inputs) }}</div>
-                <div class="item-desc">
-                  Rewards: +{{ contract.rewardCopper }}c, +{{ contract.rewardExp }} XP, +{{ contract.reputation }} rep
+                <div class="item-hint">
+                  Inputs:
+                  <span
+                    v-for="input in contract.inputs"
+                    :key="`${contract.id}-${input.itemId}`"
+                    class="reward-chip"
+                    :class="{ missing: !hasRequirement(input.itemId, input.amount) }"
+                  >
+                    {{ formatRequirement(input.itemId, input.amount) }}
+                  </span>
+                </div>
+                <div class="item-hint">
+                  Rewards:
+                  <span class="reward-chip">+{{ contract.rewardCopper }}c ({{ totalCopper + contract.rewardCopper }}c)</span>
+                  <span class="reward-chip">+{{ contract.rewardExp }} XP</span>
+                  <span class="reward-chip">+{{ contract.reputation }} rep</span>
                 </div>
               </div>
               <button class="toggle" :disabled="!canFulfillContract(contract)" @click="fulfillContract(contract)">
@@ -417,7 +453,27 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
               <div>
                 <div class="item-title">{{ attunement.name }}</div>
                 <div class="item-desc">{{ attunement.description }}</div>
-                <div class="item-hint">Cost: Mana Crystal x{{ attunement.crystalCost }}</div>
+                <div class="item-hint">
+                  Input:
+                  <span
+                    class="reward-chip"
+                    :class="{ missing: !hasRequirement('mana-crystal', attunement.crystalCost) }"
+                  >
+                    {{ formatRequirement('mana-crystal', attunement.crystalCost) }}
+                  </span>
+                </div>
+                <div class="item-hint">
+                  Outputs:
+                  <span v-if="attunement.rewardCopper" class="reward-chip">+{{ attunement.rewardCopper }}c ({{ totalCopper + attunement.rewardCopper }}c)</span>
+                  <span v-if="attunement.rewardExp" class="reward-chip">+{{ attunement.rewardExp }} XP</span>
+                  <span
+                    v-for="reward in attunement.rewardItems ?? []"
+                    :key="`${attunement.id}-${reward.itemId}`"
+                    class="reward-chip"
+                  >
+                    {{ formatRewardItem(reward.itemId, reward.amount) }}
+                  </span>
+                </div>
               </div>
               <button class="toggle" :disabled="!canUseAttunement(attunement)" @click="applyAttunement(attunement)">
                 Attune
@@ -453,7 +509,24 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
               <div>
                 <div class="item-title">{{ decree.name }}</div>
                 <div class="item-desc">{{ decree.description }}</div>
-                <div class="item-hint">Cost: {{ decree.repCost }} rep</div>
+                <div class="item-hint">
+                  Cost:
+                  <span class="reward-chip" :class="{ missing: reputation < decree.repCost }">
+                    {{ decree.repCost }} rep / {{ reputation }} rep
+                  </span>
+                </div>
+                <div class="item-hint">
+                  Rewards:
+                  <span v-if="decree.rewardCopper" class="reward-chip">+{{ decree.rewardCopper }}c ({{ totalCopper + decree.rewardCopper }}c)</span>
+                  <span v-if="decree.rewardExp" class="reward-chip">+{{ decree.rewardExp }} XP</span>
+                  <span
+                    v-for="reward in decree.rewardItems ?? []"
+                    :key="`${decree.id}-${reward.itemId}`"
+                    class="reward-chip"
+                  >
+                    {{ formatRewardItem(reward.itemId, reward.amount) }}
+                  </span>
+                </div>
               </div>
               <button class="toggle" :disabled="!canClaimDecree(decree)" @click="claimDecree(decree)">
                 {{ decreesClaimed.includes(decree.id) ? 'Claimed' : 'Enact' }}
@@ -581,6 +654,25 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
 .toggle.active {
   background: linear-gradient(120deg, #74d2ff, #6ff2c5);
   color: #0b111b;
+}
+
+.reward-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(24, 34, 52, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  font-size: 0.7rem;
+  color: #c7d4f2;
+  white-space: nowrap;
+}
+
+.reward-chip.missing {
+  border-color: rgba(255, 140, 140, 0.7);
+  color: #ffb3b3;
+  background: rgba(80, 20, 20, 0.3);
 }
 
 .village-log-list {
