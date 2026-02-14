@@ -16,6 +16,8 @@ const {
   actions,
   professionActions,
   activeTask,
+  stats,
+  skillBonuses,
 } = storeToRefs(game)
 
 const activeActionName = computed(() => {
@@ -40,6 +42,17 @@ const totalCopper = computed(
 
 const hpPercent = computed(() => Math.floor((playerHp.value / Math.max(1, maxHp.value)) * 100))
 const manaPercent = computed(() => Math.floor((mana.value / Math.max(1, maxMana.value)) * 100))
+
+const passiveHpRegenBase = computed(() => Math.max(1, Math.floor(stats.value.Spirit.value * 0.6)))
+const restHpRegenBase = computed(() =>
+  Math.max(2, Math.floor(stats.value.Spirit.value * 1.2 + stats.value.Vitality.value * 0.4)),
+)
+const passiveHpRegen = computed(() =>
+  Math.floor(passiveHpRegenBase.value * skillBonuses.value.regenMultiplier),
+)
+const restHpRegen = computed(() =>
+  Math.floor(restHpRegenBase.value * skillBonuses.value.regenMultiplier),
+)
 
 const activeActionType = computed(() => {
   if (activeTask.value.type === 'idle') return 'Idle Action'
@@ -172,7 +185,11 @@ onBeforeUnmount(() => {
           <div class="info-tooltip-title">Health (HP)</div>
           <div class="info-tooltip-line">Current: {{ playerHp }} / {{ maxHp }}</div>
           <div class="info-tooltip-line">Percent: {{ hpPercent }}%</div>
-          <div class="info-tooltip-line info-tooltip-muted">Vitality increases max HP.</div>
+          <div class="info-tooltip-line">Passive regen/tick: {{ passiveHpRegen }}</div>
+          <div class="info-tooltip-line">Rest regen/tick: {{ restHpRegen }}</div>
+          <div class="info-tooltip-line info-tooltip-muted">Passive formula: floor(Spirit × 0.6) × regen multiplier.</div>
+          <div class="info-tooltip-line info-tooltip-muted">Rest formula: floor(Spirit × 1.2 + Vitality × 0.4) × regen multiplier.</div>
+          <div class="info-tooltip-line info-tooltip-muted">Vitality increases max HP; Spirit drives HP recovery speed.</div>
         </template>
       </InfoTooltip>
 

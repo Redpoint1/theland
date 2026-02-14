@@ -57,7 +57,7 @@ export const createStats = (): Record<StatKey, Stat> => ({
     exp: 0,
     baseExpToNext: 100,
     expToNext: computeExpToNext(100, 0, 1.2, 15),
-    description: 'Mana, willpower, recovery.',
+    description: 'Willpower, vitality recovery, and spiritual force in combat.',
   },
   Intelligence: {
     name: 'Intelligence',
