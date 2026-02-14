@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import ProgressBar from './ProgressBar.vue'
 import ProfessionActionCard from './ProfessionActionCard.vue'
 import type { Profession, ProfessionAction } from '../stores/game'
+import InfoTooltip from './InfoTooltip.vue'
 
 const props = defineProps<{
   profession: Profession
@@ -38,7 +39,27 @@ const isMaxLevel = computed(() => props.profession.level >= props.profession.max
   <div class="panel">
     <div class="profession-header">
       <div>
-        <h2>{{ props.profession.name }}</h2>
+        <InfoTooltip>
+          <template #trigger>
+            <h2>{{ props.profession.name }}</h2>
+          </template>
+          <template #content>
+            <div class="info-tooltip-title">{{ props.profession.name }}</div>
+            <div class="info-tooltip-line">{{ props.profession.description }}</div>
+            <div class="info-tooltip-line">Level: {{ props.profession.level }} / {{ props.profession.maxLevel }}</div>
+            <div class="info-tooltip-line">{{ props.profession.bonusLabel }}: +{{ props.bonusPercent }}%</div>
+            <div class="info-tooltip-line">Current rank: {{ currentRank?.name }} (+{{ rankBonusPercent }}%)</div>
+            <div class="info-tooltip-line" v-if="nextRank">Next rank: {{ nextRank.name }} at Lv {{ nextRank.minLevel }}</div>
+            <div class="info-tooltip-line info-tooltip-muted">Rank ladder:</div>
+            <div
+              v-for="rank in props.profession.rankTiers"
+              :key="rank.name"
+              class="info-tooltip-line info-tooltip-muted"
+            >
+              {{ rank.name }} · Lv {{ rank.minLevel }} · +{{ Math.round(rank.bonusMultiplier * 100) }}%
+            </div>
+          </template>
+        </InfoTooltip>
         <div class="item-desc">{{ props.profession.description }}</div>
         <div class="item-hint">
           {{ props.profession.bonusLabel }}: +{{ props.bonusPercent }}%

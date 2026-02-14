@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { InventorySlot, ItemDef } from '../stores/game'
+import InfoTooltip from './InfoTooltip.vue'
 
 const props = defineProps<{
   slot: InventorySlot
@@ -26,7 +27,21 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
     <div v-if="itemDef" class="inventory-item">
       <div class="inventory-header">
         <div>
-          <div class="item-title">{{ itemDef.name }}</div>
+          <InfoTooltip>
+            <template #trigger>
+              <div class="item-title">{{ itemDef.name }}</div>
+            </template>
+            <template #content>
+              <div class="info-tooltip-title">{{ itemDef.name }}</div>
+              <div class="info-tooltip-line">{{ itemDef.description }}</div>
+              <div v-if="itemDef.effectDescription" class="info-tooltip-line">Effect: {{ itemDef.effectDescription }}</div>
+              <div class="info-tooltip-line info-tooltip-muted">Type: {{ itemDef.type }} · {{ itemDef.subtype }}</div>
+              <div class="info-tooltip-line info-tooltip-muted">Quality: {{ itemDef.quality }}</div>
+              <div class="info-tooltip-line info-tooltip-muted">Value: {{ itemDef.priceCopper }}c</div>
+              <div class="info-tooltip-line info-tooltip-muted">Stack: {{ itemDef.maxStack }}</div>
+              <div class="info-tooltip-line info-tooltip-muted">Owned in slot: {{ slot.quantity }}</div>
+            </template>
+          </InfoTooltip>
           <div class="item-desc">{{ itemDef.type }} · {{ itemDef.subtype }}</div>
         </div>
         <div class="inventory-qty">x{{ slot.quantity }}</div>
@@ -46,14 +61,6 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
         >
           Sell {{ amount === 'all' ? 'All' : amount }}
         </button>
-      </div>
-      <div class="inventory-tooltip">
-        <div class="tooltip-title">{{ itemDef.name }}</div>
-        <div class="tooltip-body">{{ itemDef.description }}</div>
-        <div v-if="itemDef.effectDescription" class="tooltip-body">Effect: {{ itemDef.effectDescription }}</div>
-        <div class="tooltip-meta">
-          Stack: {{ itemDef.maxStack }} · {{ itemDef.type }} / {{ itemDef.subtype }}
-        </div>
       </div>
     </div>
     <div v-else class="inventory-empty">Empty Slot</div>

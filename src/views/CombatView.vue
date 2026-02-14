@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useGameStore, type CombatLogEntry, type CombatLogType } from '../stores/game'
 import ProgressBar from '../components/ProgressBar.vue'
 import LogPanel from '../components/LogPanel.vue'
+import InfoTooltip from '../components/InfoTooltip.vue'
 
 const game = useGameStore()
 const {
@@ -48,6 +49,12 @@ const filteredLogs = computed(() =>
     .slice()
     .reverse(),
 )
+
+const zoneEnemySummary = (zoneId: string) => {
+  const zone = zones.value.find((entry) => entry.id === zoneId)
+  if (!zone) return []
+  return zone.enemies.map((enemy) => enemy.name)
+}
 </script>
 
 <template>
@@ -98,7 +105,28 @@ const filteredLogs = computed(() =>
             :class="{ selected: zone.id === combat.zoneId }"
             @click="game.setZone(zone.id)"
           >
-            <div class="item-title">{{ zone.name }}</div>
+            <InfoTooltip>
+              <template #trigger>
+                <div class="item-title">{{ zone.name }}</div>
+              </template>
+              <template #content>
+                <div class="info-tooltip-title">{{ zone.name }}</div>
+                <div class="info-tooltip-line">{{ zone.description }}</div>
+                <div class="info-tooltip-line">Level Range: {{ zone.levelMin }}-{{ zone.levelMax }}</div>
+                <div class="info-tooltip-line">Base Power: {{ zone.basePower }}</div>
+                <div class="info-tooltip-line">Base Reward XP: {{ zone.baseRewards.exp }}</div>
+                <div class="info-tooltip-line">Base Reward Copper: {{ zone.baseRewards.copper }}c</div>
+                <div class="info-tooltip-line">Base Combat XP: {{ zone.baseRewards.skillExp }}</div>
+                <div class="info-tooltip-line info-tooltip-muted">Enemies:</div>
+                <div
+                  v-for="enemyName in zoneEnemySummary(zone.id)"
+                  :key="`${zone.id}-${enemyName}`"
+                  class="info-tooltip-line info-tooltip-muted"
+                >
+                  {{ enemyName }}
+                </div>
+              </template>
+            </InfoTooltip>
             <div class="item-desc">{{ zone.description }}</div>
             <div class="zone-level">Lv. {{ zone.levelMin }}-{{ zone.levelMax }}</div>
           </button>
@@ -106,7 +134,19 @@ const filteredLogs = computed(() =>
 
         <div class="enemy-card">
           <div>
-            <div class="item-title">{{ combat.enemyName }}</div>
+            <InfoTooltip>
+              <template #trigger>
+                <div class="item-title">{{ combat.enemyName }}</div>
+              </template>
+              <template #content>
+                <div class="info-tooltip-title">{{ combat.enemyName }}</div>
+                <div class="info-tooltip-line">Current Zone: {{ currentZone.name }}</div>
+                <div class="info-tooltip-line">Enemy Level: {{ combat.enemyLevel }}</div>
+                <div class="info-tooltip-line">Enemy Power: {{ Math.floor(combat.enemyPower) }}</div>
+                <div class="info-tooltip-line">Enemy HP: {{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
+                <div class="info-tooltip-line info-tooltip-muted">Defeat rewards are scaled by enemy level and type.</div>
+              </template>
+            </InfoTooltip>
             <div class="item-desc">Zone: {{ currentZone.name }}</div>
           </div>
           <div class="enemy-stats">
@@ -118,10 +158,21 @@ const filteredLogs = computed(() =>
             <div class="value">{{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
             <ProgressBar :value="combat.enemyHp" :max="combat.enemyMaxHp" variant="enemy" />
           </div>
-          <div class="reward-hint">
-            Rewards: +{{ combatRewards.exp }} XP, +{{ combatRewards.copper }}c,
-            +{{ combatRewards.skillExp }} Combat XP / kill
-          </div>
+          <InfoTooltip>
+            <template #trigger>
+              <div class="reward-hint">
+                Rewards: +{{ combatRewards.exp }} XP, +{{ combatRewards.copper }}c,
+                +{{ combatRewards.skillExp }} Combat XP / kill
+              </div>
+            </template>
+            <template #content>
+              <div class="info-tooltip-title">Current Enemy Rewards</div>
+              <div class="info-tooltip-line">Character XP: +{{ combatRewards.exp }}</div>
+              <div class="info-tooltip-line">Currency: +{{ combatRewards.copper }}c</div>
+              <div class="info-tooltip-line">Combat Skill XP: +{{ combatRewards.skillExp }}</div>
+              <div class="info-tooltip-line">Stat XP per stat: +{{ combatRewards.statExp }}</div>
+            </template>
+          </InfoTooltip>
         </div>
       </div>
 

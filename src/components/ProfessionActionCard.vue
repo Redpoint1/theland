@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import ProgressBar from './ProgressBar.vue'
 import type { Profession, ProfessionAction } from '../stores/game'
+import InfoTooltip from './InfoTooltip.vue'
 
 const props = defineProps<{
   profession: Profession
@@ -19,6 +20,17 @@ const hasMissingInputs = computed(() =>
     (input) => props.getItemQuantity(input.itemId) < input.amount,
   ),
 )
+
+const inputSummary = computed(() =>
+  (props.action.inputs ?? []).map((input) => {
+    const current = props.getItemQuantity(input.itemId)
+    return `${props.getItemName(input.itemId)} x${input.amount} (have ${current})`
+  }),
+)
+
+const rewardSummary = computed(() =>
+  props.action.rewards.map((reward) => `${props.getItemName(reward.itemId)} x${reward.amount}`),
+)
 </script>
 
 <template>
@@ -27,7 +39,21 @@ const hasMissingInputs = computed(() =>
     :class="{ locked: props.profession.level < props.action.requiredLevel }"
   >
     <div>
-      <div class="item-title">{{ props.action.name }}</div>
+      <InfoTooltip>
+        <template #trigger>
+          <div class="item-title">{{ props.action.name }}</div>
+        </template>
+        <template #content>
+          <div class="info-tooltip-title">{{ props.action.name }}</div>
+          <div class="info-tooltip-line">{{ props.action.description }}</div>
+          <div class="info-tooltip-line">Required level: {{ props.action.requiredLevel }}</div>
+          <div class="info-tooltip-line">Profession XP per completion: +{{ props.action.expGain }}</div>
+          <div v-if="inputSummary.length" class="info-tooltip-line info-tooltip-muted">Inputs:</div>
+          <div v-for="entry in inputSummary" :key="entry" class="info-tooltip-line info-tooltip-muted">{{ entry }}</div>
+          <div class="info-tooltip-line info-tooltip-muted">Rewards:</div>
+          <div v-for="entry in rewardSummary" :key="entry" class="info-tooltip-line info-tooltip-muted">{{ entry }}</div>
+        </template>
+      </InfoTooltip>
       <div class="item-desc">{{ props.action.description }}</div>
       <div class="item-hint">Requires level {{ props.action.requiredLevel }}</div>
       <div v-if="props.action.inputs?.length" class="item-hint">
