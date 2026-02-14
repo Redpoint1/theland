@@ -103,7 +103,7 @@ onBeforeUnmount(() => {
     @focusin="openTooltip"
     @focusout="onFocusOut"
   >
-    <div ref="triggerRef" class="info-tooltip-trigger">
+    <div ref="triggerRef" class="info-tooltip-trigger with-tooltip">
       <slot name="trigger" />
     </div>
     <div v-if="!teleport" class="info-tooltip-panel" :style="{ maxWidth }">
@@ -131,6 +131,14 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   min-width: 0;
+}
+
+.with-tooltip {
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgba(116, 210, 255, 0.6);
+  text-underline-offset: 0.18em;
 }
 
 .info-tooltip-panel {

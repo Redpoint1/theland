@@ -402,12 +402,6 @@ const professionBonusItems = computed<BonusItem[]>(() =>
   font-weight: 600;
 }
 
-.with-tooltip {
-  display: inline-flex;
-  border-bottom: 1px dotted rgba(116, 210, 255, 0.6);
-  cursor: help;
-}
-
 .item-desc {
   font-size: 0.8rem;
   color: #8fa2c6;

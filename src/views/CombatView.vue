@@ -491,7 +491,6 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
 
 .log-focus {
   color: #c8f0ff;
-  border-bottom: 1px dotted rgba(116, 210, 255, 0.7);
 }
 
 .log-time {
