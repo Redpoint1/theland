@@ -94,7 +94,6 @@ const details = computed(() => {
           </div>
         </template>
       </InfoTooltip>
-      <div class="item-desc">{{ skill.description }}</div>
     </div>
     <div class="item-value">
       <div class="value">Lv. {{ skill.level }}</div>
@@ -103,45 +102,3 @@ const details = computed(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.list-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
-}
-
-.item-title {
-  font-weight: 600;
-}
-
-.item-desc {
-  font-size: 0.85rem;
-  color: #8fa2c6;
-}
-
-.item-value {
-  text-align: right;
-  min-width: 120px;
-}
-
-.value {
-  font-size: 1.6rem;
-  font-weight: 600;
-}
-
-.item-hint {
-  font-size: 0.75rem;
-  color: #7d90b8;
-}
-
-@media (max-width: 720px) {
-  .list-item,
-  .item-value {
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-  }
-}
-</style>

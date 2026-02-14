@@ -15,7 +15,9 @@ const props = defineProps<{
 }>()
 
 const game = useGameStore()
-const { maxHp, maxMana, maxInventorySlots } = storeToRefs(game)
+const { maxHp, maxMana, maxInventorySlots, skillBonuses, stats } = storeToRefs(game)
+
+const toPercent = (value: number) => `${Math.round(value * 10000) / 100}%`
 
 const derivedLines = computed(() => {
   if (props.stat.name === 'Strength') {
@@ -37,7 +39,12 @@ const derivedLines = computed(() => {
     ]
   }
   if (props.stat.name === 'Spirit') {
-    return ['Combat power contribution: +0.4 per level']
+    return [
+      'Combat power contribution: +0.4 per level',
+      `Passive HP regen base: floor(Spirit×0.6) = ${Math.max(1, Math.floor(props.stat.value * 0.6))}`,
+      `Rest HP regen base: floor(Spirit×1.2 + Vitality×0.4) = ${Math.max(2, Math.floor(props.stat.value * 1.2 + stats.value.Vitality.value * 0.4))}`,
+      `Global regen multiplier bonus: +${toPercent(skillBonuses.value.regenMultiplier - 1)}`,
+    ]
   }
   return [
     'Max Mana contribution: +10 per level',
@@ -69,7 +76,6 @@ const derivedLines = computed(() => {
           </div>
         </template>
       </InfoTooltip>
-      <div class="item-desc">{{ stat.description }}</div>
     </div>
     <div class="item-value">
       <div class="value">+{{ stat.value }}</div>
