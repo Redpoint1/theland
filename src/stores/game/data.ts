@@ -4,6 +4,7 @@ import type {
   Profession,
   ProfessionAction,
   ProfessionKey,
+  ProfessionRankTier,
   Skill,
   SkillKey,
   Stat,
@@ -12,6 +13,18 @@ import type {
   SeedItem,
 } from './types'
 import { computeExpToNext } from './experience'
+
+const professionRanks: [ProfessionRankTier, ...ProfessionRankTier[]] = [
+  { name: 'Novice', minLevel: 0, bonusMultiplier: 0 },
+  { name: 'Apprentice', minLevel: 25, bonusMultiplier: 0.05 },
+  { name: 'Journeyman', minLevel: 50, bonusMultiplier: 0.1 },
+  { name: 'Adept', minLevel: 75, bonusMultiplier: 0.16 },
+  { name: 'Expert', minLevel: 100, bonusMultiplier: 0.23 },
+  { name: 'Master', minLevel: 125, bonusMultiplier: 0.31 },
+  { name: 'Grandmaster', minLevel: 150, bonusMultiplier: 0.4 },
+  { name: 'Mythic', minLevel: 175, bonusMultiplier: 0.5 },
+  { name: 'Ascendant', minLevel: 200, bonusMultiplier: 0.62 },
+]
 
 export const createStats = (): Record<StatKey, Stat> => ({
   Strength: {
@@ -106,9 +119,11 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     exp: 0,
     baseExpToNext: 100,
     expToNext: computeExpToNext(100, 0, 1.25, 15),
+    maxLevel: 200,
     description: 'Extract ore and crystals from the Land.',
     bonusLabel: 'Yield bonus',
     bonusPerLevel: 0.03,
+    rankTiers: professionRanks,
   },
   Herbalism: {
     name: 'Herbalism',
@@ -116,9 +131,11 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     exp: 0,
     baseExpToNext: 100,
     expToNext: computeExpToNext(100, 0, 1.25, 15),
+    maxLevel: 200,
     description: 'Gather rare herbs and reagents.',
     bonusLabel: 'Yield bonus',
     bonusPerLevel: 0.03,
+    rankTiers: professionRanks,
   },
   Smelting: {
     name: 'Smelting',
@@ -126,9 +143,11 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     exp: 0,
     baseExpToNext: 100,
     expToNext: computeExpToNext(100, 0, 1.25, 15),
+    maxLevel: 200,
     description: 'Refine ores into usable ingots.',
     bonusLabel: 'Output bonus',
     bonusPerLevel: 0.02,
+    rankTiers: professionRanks,
   },
   Alchemy: {
     name: 'Alchemy',
@@ -136,9 +155,11 @@ export const createProfessions = (): Record<ProfessionKey, Profession> => ({
     exp: 0,
     baseExpToNext: 100,
     expToNext: computeExpToNext(100, 0, 1.25, 15),
+    maxLevel: 200,
     description: 'Brew tonics and mana infusions.',
     bonusLabel: 'Potency bonus',
     bonusPerLevel: 0.02,
+    rankTiers: professionRanks,
   },
 })
 

@@ -58,8 +58,10 @@ export const useProgressionLogic = ({
   const skillExpToNext = (skill: Skill) =>
     computeExpToNext(skill.baseExpToNext, skill.level, 1.22, 10)
 
-  const professionExpToNext = (profession: Profession) =>
-    computeExpToNext(profession.baseExpToNext, profession.level, 1.25, 15)
+  const professionExpToNext = (profession: Profession) => {
+    if (profession.level >= profession.maxLevel) return 0
+    return computeExpToNext(profession.baseExpToNext, profession.level, 1.25, 15)
+  }
   const statList = computed(() => Object.values(stats))
   const skillList = computed(() => Object.values(skills))
   const professionList = computed(() => Object.values(professions))
@@ -132,11 +134,24 @@ export const useProgressionLogic = ({
 
   const addProfessionExp = (key: ProfessionKey, amount: number) => {
     const profession = professions[key]
+    if (profession.level >= profession.maxLevel) {
+      profession.level = profession.maxLevel
+      profession.exp = 0
+      profession.expToNext = 0
+      return
+    }
+
     profession.exp += amount
-    while (profession.exp >= profession.expToNext) {
+    while (profession.level < profession.maxLevel && profession.exp >= profession.expToNext) {
       profession.exp -= profession.expToNext
       profession.level += 1
       profession.expToNext = professionExpToNext(profession)
+    }
+
+    if (profession.level >= profession.maxLevel) {
+      profession.level = profession.maxLevel
+      profession.exp = 0
+      profession.expToNext = 0
     }
   }
 

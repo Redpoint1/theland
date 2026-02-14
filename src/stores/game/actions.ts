@@ -248,11 +248,23 @@ export const useActionLogic = ({
   }
 
   const professionBonuses = computed(() => {
+    const rankBonus = (key: ProfessionKey) => {
+      const profession = professions[key]
+      const activeRank =
+        profession.rankTiers
+          .slice()
+          .reverse()
+          .find((rank) => profession.level >= rank.minLevel) ?? profession.rankTiers[0]
+      return activeRank?.bonusMultiplier ?? 0
+    }
+
     return {
-      Mining: 1 + professions.Mining.level * professions.Mining.bonusPerLevel,
-      Herbalism: 1 + professions.Herbalism.level * professions.Herbalism.bonusPerLevel,
-      Smelting: 1 + professions.Smelting.level * professions.Smelting.bonusPerLevel,
-      Alchemy: 1 + professions.Alchemy.level * professions.Alchemy.bonusPerLevel,
+      Mining: 1 + professions.Mining.level * professions.Mining.bonusPerLevel + rankBonus('Mining'),
+      Herbalism:
+        1 + professions.Herbalism.level * professions.Herbalism.bonusPerLevel + rankBonus('Herbalism'),
+      Smelting:
+        1 + professions.Smelting.level * professions.Smelting.bonusPerLevel + rankBonus('Smelting'),
+      Alchemy: 1 + professions.Alchemy.level * professions.Alchemy.bonusPerLevel + rankBonus('Alchemy'),
     }
   })
 

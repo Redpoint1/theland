@@ -2,6 +2,12 @@ export type StatKey = 'Strength' | 'Agility' | 'Vitality' | 'Spirit' | 'Intellig
 export type SkillKey = 'Combat' | 'Survival' | 'Harvesting' | 'Crafting' | 'Arcana'
 export type ProfessionKey = 'Mining' | 'Herbalism' | 'Smelting' | 'Alchemy'
 
+export interface ProfessionRankTier {
+  name: string
+  minLevel: number
+  bonusMultiplier: number
+}
+
 export interface Stat {
   name: StatKey
   value: number
@@ -26,9 +32,11 @@ export interface Profession {
   exp: number
   expToNext: number
   baseExpToNext: number
+  maxLevel: number
   description: string
   bonusLabel: string
   bonusPerLevel: number
+  rankTiers: [ProfessionRankTier, ...ProfessionRankTier[]]
 }
 
 export interface ProfessionAction {
