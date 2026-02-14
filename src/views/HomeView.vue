@@ -5,7 +5,6 @@ import { useGameStore } from '../stores/game'
 import ProgressBar from '../components/ProgressBar.vue'
 import StatCard from '../components/StatCard.vue'
 import SkillCard from '../components/SkillCard.vue'
-import SkillBonusItem from '../components/SkillBonusItem.vue'
 import IdleActionCard from '../components/IdleActionCard.vue'
 import LogPanel from '../components/LogPanel.vue'
 import InfoTooltip from '../components/InfoTooltip.vue'
@@ -27,14 +26,12 @@ const {
   skillList,
   actions,
   activeTask,
-  skillBonuses,
   idleActionProgress,
   idleActionJustCompleted,
   actionLogs,
 } = storeToRefs(game)
 const { actionDurationMs, increaseStatAllocation, decreaseStatAllocation, applyStatAllocations } = game
 
-const formatPercent = (value: number) => `${Math.round(value * 100)}%`
 const totalCopper = computed(
   () =>
     currencyBreakdown.value.gold * 10000 +
@@ -42,29 +39,6 @@ const totalCopper = computed(
     currencyBreakdown.value.copper,
 )
 const readableCurrency = computed(() => game.formatCopperToCurrency(totalCopper.value))
-
-const bonusItems = computed(() => [
-  {
-    label: 'Combat damage bonus',
-    value: formatPercent(skillBonuses.value.combatDamageMultiplier - 1),
-  },
-  {
-    label: 'Damage reduction',
-    value: formatPercent(skillBonuses.value.combatDamageReduction),
-  },
-  {
-    label: 'Regen bonus',
-    value: formatPercent(skillBonuses.value.regenMultiplier - 1),
-  },
-  {
-    label: 'XP bonus',
-    value: formatPercent(skillBonuses.value.expMultiplier - 1),
-  },
-  {
-    label: 'Currency bonus',
-    value: formatPercent(skillBonuses.value.currencyMultiplier - 1),
-  },
-])
 
 const idleProgressValue = computed(() =>
   idleActionJustCompleted.value ? actionDurationMs : idleActionProgress.value,
@@ -241,18 +215,6 @@ const parseActionLog = (log: { message: string; type: string }): ParsedActionLog
         <h2>Skills</h2>
         <div class="list">
           <SkillCard v-for="skill in skillList" :key="skill.name" :skill="skill" />
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Skill Bonuses</h2>
-        <div class="list">
-          <SkillBonusItem
-            v-for="bonus in bonusItems"
-            :key="bonus.label"
-            :label="bonus.label"
-            :value="bonus.value"
-          />
         </div>
       </div>
 
