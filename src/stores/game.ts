@@ -6,6 +6,7 @@ import {
   createItemDefs,
   createProfessionActions,
   createProfessions,
+  createSpellDefinitions,
   createSkills,
   createStats,
   createZones,
@@ -22,6 +23,8 @@ import type {
   ProfessionKey,
   Skill,
   SkillKey,
+  SpellDefinition,
+  SpellProgress,
   Stat,
   StatKey,
   Zone,
@@ -53,6 +56,8 @@ export type {
   ProfessionLogType,
   Skill,
   SkillKey,
+  SpellDefinition,
+  SpellProgress,
   Stat,
   StatKey,
   Zone,
@@ -94,6 +99,22 @@ export const useGameStore = defineStore('game', () => {
 
   const inventory = reactive<InventorySlot[]>([])
   const zones = reactive<Zone[]>(createZones())
+  const spellDefinitions = reactive<SpellDefinition[]>(createSpellDefinitions())
+  const spellbook = reactive<Record<string, SpellProgress>>(
+    Object.fromEntries(
+      spellDefinitions.map((spell) => [
+        spell.id,
+        {
+          id: spell.id,
+          learned: spell.id === 'arcane-burst',
+          level: spell.id === 'arcane-burst' ? 1 : 0,
+          exp: 0,
+          expToNext: 60,
+        },
+      ]),
+    ),
+  )
+  const selectedSpellId = ref('arcane-burst')
 
   const defaultZone = zones[0]!
   const defaultEnemy: EnemyType = defaultZone.enemies[0]!
@@ -335,19 +356,28 @@ export const useGameStore = defineStore('game', () => {
   const {
     currentZone,
     currentEnemyDropPreview,
+    activeBuffs,
+    availableSpells,
+    knownSpells,
     maxHp,
     spawnEnemy,
     setZone,
     toggleCombat,
     toggleResting,
     runCombatTick,
-    castArcaneBurst,
-    arcaneBurstCost,
+    learnSpell,
+    setSelectedSpell,
+    castSelectedSpell,
+    selectedSpell,
+    selectedSpellManaCost,
   } = useCombatLogic({
     character,
     stats,
     skills,
     skillBonuses,
+    spellDefinitions,
+    spellbook,
+    selectedSpellId,
     zones,
     combat,
     combatRewards,
@@ -441,6 +471,13 @@ export const useGameStore = defineStore('game', () => {
     skillList,
     currentZone,
     currentEnemyDropPreview,
+    activeBuffs,
+    availableSpells,
+    knownSpells,
+    spellbook,
+    selectedSpellId,
+    selectedSpell,
+    selectedSpellManaCost,
     skillBonuses,
     currencyBreakdown,
     formatCopperToCurrency,
@@ -454,8 +491,9 @@ export const useGameStore = defineStore('game', () => {
     toggleAction,
     toggleProfessionAction,
     setZone,
-    castArcaneBurst,
-    arcaneBurstCost,
+    learnSpell,
+    setSelectedSpell,
+    castSelectedSpell,
     addCombatLog,
     clearCombatLogs,
     addProfessionLog,

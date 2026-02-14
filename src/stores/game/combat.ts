@@ -1,5 +1,6 @@
-import { computed, type ComputedRef, type Ref } from 'vue'
+import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import { enemyDropTables } from './data'
+import { computeExpToNext } from './experience'
 import { formatCopperToCurrency } from './progression'
 import type { SkillBonuses } from './progression'
 import type {
@@ -9,6 +10,8 @@ import type {
   EnemyType,
   Skill,
   SkillKey,
+  SpellDefinition,
+  SpellProgress,
   Stat,
   StatKey,
   Zone,
@@ -36,6 +39,9 @@ export interface CombatLogicDeps {
   stats: Record<StatKey, Stat>
   skills: Record<SkillKey, Skill>
   skillBonuses: ComputedRef<SkillBonuses>
+  spellDefinitions: SpellDefinition[]
+  spellbook: Record<string, SpellProgress>
+  selectedSpellId: Ref<string>
   zones: Zone[]
   combat: CombatState
   combatRewards: CombatRewards
@@ -55,11 +61,23 @@ export interface CombatLogicDeps {
   deactivateProfessionActions: () => void
 }
 
+interface ActiveBuff {
+  id: string
+  name: string
+  remainingTicks: number
+  combatDamageBonus: number
+  damageReductionBonus: number
+  spellPowerBonus: number
+}
+
 export const useCombatLogic = ({
   character,
   stats,
   skills,
   skillBonuses,
+  spellDefinitions,
+  spellbook,
+  selectedSpellId,
   zones,
   combat,
   combatRewards,
@@ -80,6 +98,24 @@ export const useCombatLogic = ({
 }: CombatLogicDeps) => {
   const currentZone = computed((): Zone => zones.find((zone) => zone.id === combat.zoneId) ?? defaultZone)
   const maxHp = computed(() => Math.floor(character.level * 8 + stats.Vitality.value * 12))
+  const activeBuffs = ref<ActiveBuff[]>([])
+  const totalCombatDamageBuff = computed(() =>
+    activeBuffs.value.reduce((total, buff) => total + buff.combatDamageBonus, 0),
+  )
+  const totalDamageReductionBuff = computed(() =>
+    activeBuffs.value.reduce((total, buff) => total + buff.damageReductionBonus, 0),
+  )
+  const totalSpellPowerBuff = computed(() =>
+    activeBuffs.value.reduce((total, buff) => total + buff.spellPowerBonus, 0),
+  )
+  const availableSpells = computed(() => spellDefinitions)
+  const knownSpells = computed(() =>
+    spellDefinitions.filter((spell) => spellbook[spell.id]?.learned),
+  )
+  const selectedSpell = computed(
+    () => spellDefinitions.find((spell) => spell.id === selectedSpellId.value) ?? spellDefinitions[0],
+  )
+  const selectedSpellManaCost = computed(() => selectedSpell.value?.manaCost ?? 0)
   const currentEnemyDrops = computed<EnemyDropEntry[]>(() => enemyDropTables[combat.enemyId] ?? [])
   const currentEnemyDropPreview = computed(() =>
     currentEnemyDrops.value.map((drop) => {
@@ -196,6 +232,56 @@ export const useCombatLogic = ({
     spawnEnemy()
   }
 
+  const spellExpToNext = (level: number) => {
+    if (level >= 100) return 0
+    return computeExpToNext(60, level, 1.15, 8)
+  }
+
+  const gainSpellExp = (spellId: string, amount: number) => {
+    const progress = spellbook[spellId]
+    if (!progress || !progress.learned || progress.level >= 100 || amount <= 0) return
+
+    progress.exp += Math.floor(amount)
+    while (progress.level < 100 && progress.exp >= progress.expToNext) {
+      progress.exp -= progress.expToNext
+      progress.level += 1
+      progress.expToNext = spellExpToNext(progress.level)
+    }
+
+    if (progress.level >= 100) {
+      progress.level = 100
+      progress.exp = 0
+      progress.expToNext = 0
+    }
+  }
+
+  const learnSpell = (spellId: string) => {
+    const spell = spellDefinitions.find((entry) => entry.id === spellId)
+    if (!spell) return
+    const progress = spellbook[spellId]
+    if (!progress || progress.learned) return
+
+    if (skills.Arcana.level < spell.requiredArcanaLevel) {
+      addCombatLog(
+        'system',
+        `Cannot learn ${spell.name}. Requires Arcana level ${spell.requiredArcanaLevel}.`,
+      )
+      return
+    }
+
+    progress.learned = true
+    progress.level = Math.max(1, progress.level)
+    progress.exp = 0
+    progress.expToNext = spellExpToNext(progress.level)
+    addCombatLog('system', `Learned spell: ${spell.name}.`)
+  }
+
+  const setSelectedSpell = (spellId: string) => {
+    const progress = spellbook[spellId]
+    if (!progress?.learned) return
+    selectedSpellId.value = spellId
+  }
+
   const toggleCombat = () => {
     if (activeTask.value.type === 'combat') {
       setActiveTask('none')
@@ -233,8 +319,11 @@ export const useCombatLogic = ({
       skills.Combat.level * 2 +
       stats.Spirit.value * 0.4
     const enemyPower = combat.enemyPower
-    const combatBonus = skillBonuses.value.combatDamageMultiplier
-    const damageReduction = skillBonuses.value.combatDamageReduction
+    const combatBonus = skillBonuses.value.combatDamageMultiplier * (1 + totalCombatDamageBuff.value)
+    const damageReduction = Math.min(
+      0.9,
+      skillBonuses.value.combatDamageReduction + totalDamageReductionBuff.value,
+    )
 
     const playerDamage = Math.max(
       1,
@@ -260,39 +349,130 @@ export const useCombatLogic = ({
       setActiveTask('rest')
       addCombatLog('combat', 'You are downed and begin resting.')
     }
+
+    if (activeBuffs.value.length > 0) {
+      const expired: string[] = []
+      activeBuffs.value = activeBuffs.value
+        .map((buff) => ({ ...buff, remainingTicks: buff.remainingTicks - 1 }))
+        .filter((buff) => {
+          if (buff.remainingTicks > 0) return true
+          expired.push(buff.name)
+          return false
+        })
+
+      expired.forEach((name) => addCombatLog('system', `${name} has faded.`))
+    }
   }
 
-  const arcaneBurstCost = 20
-
-  const castArcaneBurst = () => {
+  const castSelectedSpell = () => {
     if (activeTask.value.type !== 'combat') {
-      addCombatLog('system', 'You can only cast this during combat.')
+      addCombatLog('system', 'You can only cast spells during combat.')
       return
     }
-    const spent = spendMana(arcaneBurstCost)
+
+    const spell = selectedSpell.value
+    if (!spell) return
+    const progress = spellbook[spell.id]
+    if (!progress?.learned) {
+      addCombatLog('system', `You have not learned ${spell.name}.`)
+      return
+    }
+
+    if (spell.effectType === 'healing' && playerHp.value >= maxHp.value) {
+      addCombatLog('system', `${spell.name} cannot be cast at full health.`)
+      return
+    }
+
+    const spent = spendMana(spell.manaCost)
     if (!spent) {
-      addCombatLog('system', 'Not enough mana for Arcane Burst.')
+      addCombatLog('system', `Not enough mana for ${spell.name}.`)
       return
     }
-    const bonusDamage = Math.max(6, Math.floor(stats.Intelligence.value * 1.6 + skills.Arcana.level * 3))
-    combat.enemyHp = Math.max(0, combat.enemyHp - bonusDamage)
-    addCombatLog('damage', `Arcane Burst hits ${combat.enemyName} for ${bonusDamage} damage.`)
-    if (combat.enemyHp === 0) {
-      handleEnemyDefeated()
+
+    const spellLevel = progress.level
+    const rawPower =
+      spell.baseDamage +
+      spellLevel * spell.damagePerLevel +
+      stats.Intelligence.value * spell.statScaling.intelligence +
+      stats.Spirit.value * spell.statScaling.spirit +
+      skills.Arcana.level * spell.skillScaling.arcana +
+      skills.Combat.level * spell.skillScaling.combat +
+      Math.random() * 4
+
+    if (spell.effectType === 'healing') {
+      const healAmount = Math.max(
+        4,
+        Math.floor(rawPower * skillBonuses.value.regenMultiplier),
+      )
+      playerHp.value = Math.min(maxHp.value, playerHp.value + healAmount)
+      addCombatLog('rest', `${spell.name} restores ${healAmount} HP.`)
+    } else if (spell.effectType === 'buff') {
+      const profile = spell.buffProfile
+      if (!profile) {
+        addCombatLog('system', `${spell.name} has no buff profile configured.`)
+        return
+      }
+
+      const levelFactor = 1 + progress.level * 0.01
+      const arcanaFactor = 1 + skills.Arcana.level * 0.002
+      const spiritFactor = 1 + stats.Spirit.value * 0.0015
+      const scale = levelFactor * arcanaFactor * spiritFactor
+
+      const appliedBuff: ActiveBuff = {
+        id: spell.id,
+        name: spell.name,
+        remainingTicks: Math.max(1, Math.floor(profile.durationTicks + progress.level * 0.06)),
+        combatDamageBonus: Math.min(0.5, (profile.combatDamageBonus ?? 0) * scale),
+        damageReductionBonus: Math.min(0.4, (profile.damageReductionBonus ?? 0) * scale),
+        spellPowerBonus: Math.min(0.5, (profile.spellPowerBonus ?? 0) * scale),
+      }
+
+      const existingIndex = activeBuffs.value.findIndex((buff) => buff.id === spell.id)
+      if (existingIndex >= 0) {
+        activeBuffs.value[existingIndex] = appliedBuff
+      } else {
+        activeBuffs.value.push(appliedBuff)
+      }
+
+      addCombatLog(
+        'system',
+        `${spell.name} empowers you for ${appliedBuff.remainingTicks} ticks (+${Math.round(appliedBuff.combatDamageBonus * 100)}% combat, +${Math.round(appliedBuff.spellPowerBonus * 100)}% spell, +${Math.round(appliedBuff.damageReductionBonus * 100)}% reduction).`,
+      )
+    } else {
+      const bonusDamage = Math.max(
+        6,
+        Math.floor(rawPower * skillBonuses.value.combatDamageMultiplier * (1 + totalSpellPowerBuff.value)),
+      )
+
+      combat.enemyHp = Math.max(0, combat.enemyHp - bonusDamage)
+      addCombatLog('damage', `${spell.name} hits ${combat.enemyName} for ${bonusDamage} spell damage.`)
+
+      if (combat.enemyHp === 0) {
+        handleEnemyDefeated()
+      }
     }
+
+    gainSpellExp(spell.id, spell.manaCost * 1.2 + combat.enemyLevel * 0.8)
+    addSkillExp('Arcana', Math.max(2, Math.floor(spell.manaCost * 0.3)))
   }
 
   return {
     currentZone,
     currentEnemyDrops,
     currentEnemyDropPreview,
+    activeBuffs,
+    availableSpells,
+    knownSpells,
+    selectedSpell,
+    selectedSpellManaCost,
     maxHp,
     spawnEnemy,
     setZone,
     toggleCombat,
     toggleResting,
     runCombatTick,
-    castArcaneBurst,
-    arcaneBurstCost,
+    learnSpell,
+    setSelectedSpell,
+    castSelectedSpell,
   }
 }

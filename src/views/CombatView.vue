@@ -14,6 +14,12 @@ const {
   combatLogs,
   currentZone,
   currentEnemyDropPreview,
+  activeBuffs,
+  availableSpells,
+  spellbook,
+  selectedSpellId,
+  selectedSpell,
+  selectedSpellManaCost,
   character,
   stats,
   skills,
@@ -24,12 +30,12 @@ const {
   activeTask,
 } = storeToRefs(game)
 
-const { castArcaneBurst, arcaneBurstCost } = game
+const { castSelectedSpell, setSelectedSpell, learnSpell } = game
 
 const isFighting = computed(() => activeTask.value.type === 'combat')
 const isResting = computed(() => activeTask.value.type === 'rest')
-const canCastArcaneBurst = computed(() =>
-  activeTask.value.type === 'combat' && mana.value >= arcaneBurstCost,
+const canCastSelectedSpell = computed(() =>
+  activeTask.value.type === 'combat' && mana.value >= selectedSpellManaCost.value,
 )
 
 const filters = ref<Record<CombatLogType, boolean>>({
@@ -64,6 +70,33 @@ const zoneEnemySummary = (zoneId: string) => {
 const formatCurrency = (copper: number) => game.formatCopperToCurrency(copper)
 
 const formatPercent = (value: number) => `${Math.round(value * 10000) / 100}%`
+
+const activeBuffCombatBonus = computed(() =>
+  activeBuffs.value.reduce((total, buff) => total + buff.combatDamageBonus, 0),
+)
+const activeBuffSpellBonus = computed(() =>
+  activeBuffs.value.reduce((total, buff) => total + buff.spellPowerBonus, 0),
+)
+const activeBuffReductionBonus = computed(() =>
+  activeBuffs.value.reduce((total, buff) => total + buff.damageReductionBonus, 0),
+)
+
+type SpellTypeFilter = 'all' | 'damage' | 'healing' | 'buff'
+
+const spellTypeFilter = ref<SpellTypeFilter>('all')
+
+const spellTypeFilterOptions: Array<{ id: SpellTypeFilter; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'damage', label: 'Damage' },
+  { id: 'healing', label: 'Healing' },
+  { id: 'buff', label: 'Buff' },
+]
+
+const filteredSpells = computed(() =>
+  spellTypeFilter.value === 'all'
+    ? availableSpells.value
+    : availableSpells.value.filter((spell) => spell.effectType === spellTypeFilter.value),
+)
 
 interface ParsedCombatLog {
   before: string
@@ -146,19 +179,66 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
     }
   }
 
-  const arcaneBurst = message.match(/^Arcane Burst hits (.+) for (\d+) damage\.$/)
-  if (arcaneBurst) {
-    const [, enemyName, damageText] = arcaneBurst
+  const spellHit = message.match(/^(.+) hits (.+) for (\d+) spell damage\.$/)
+  if (spellHit) {
+    const [, spellName, enemyName, damageText] = spellHit
     return {
-      before: `Arcane Burst hits ${enemyName} for `,
+      before: `${spellName} hits ${enemyName} for `,
       focus: `${damageText} damage`,
       after: '.',
-      tooltipTitle: 'Arcane Burst Damage',
+      tooltipTitle: `${spellName} Damage`,
       tooltipLines: [
-        'Formula: max(6, floor(Intelligence×1.6 + Arcana×3))',
+        'Formula: floor((base + level scaling + stat scaling + skill scaling + random) × CombatDamageMultiplier)',
         `Current Intelligence: ${stats.value.Intelligence.value}`,
         `Current Arcana: ${skills.value.Arcana.level}`,
+        `Combat multiplier: +${formatPercent(skillBonuses.value.combatDamageMultiplier - 1)}`,
       ],
+    }
+  }
+
+  const spellHeal = message.match(/^(.+) restores (\d+) HP\.$/)
+  if (spellHeal) {
+    const [, spellName, healText] = spellHeal
+    return {
+      before: `${spellName} restores `,
+      focus: `${healText} HP`,
+      after: '.',
+      tooltipTitle: `${spellName} Healing`,
+      tooltipLines: [
+        'Formula: floor((base + level scaling + stat scaling + skill scaling + random) × RegenMultiplier)',
+        `Current Spirit: ${stats.value.Spirit.value}`,
+        `Current Arcana: ${skills.value.Arcana.level}`,
+        `Regen multiplier bonus: +${formatPercent(skillBonuses.value.regenMultiplier - 1)}`,
+      ],
+    }
+  }
+
+  const buffApplied = message.match(/^(.+) empowers you for (\d+) ticks \(\+(\d+)% combat, \+(\d+)% spell, \+(\d+)% reduction\)\.$/)
+  if (buffApplied) {
+    const [, spellName, tickText, combatText, spellText, reductionText] = buffApplied
+    return {
+      before: `${spellName} empowers you for `,
+      focus: `${tickText} ticks`,
+      after: ` (+${combatText}% combat, +${spellText}% spell, +${reductionText}% reduction).`,
+      tooltipTitle: `${spellName} Buff`,
+      tooltipLines: [
+        `Duration: ${tickText} combat ticks`,
+        `Combat damage bonus: +${combatText}%`,
+        `Spell power bonus: +${spellText}%`,
+        `Damage reduction bonus: +${reductionText}%`,
+      ],
+    }
+  }
+
+  const buffFaded = message.match(/^(.+) has faded\.$/)
+  if (buffFaded) {
+    const [, buffName] = buffFaded
+    return {
+      before: '',
+      focus: buffName,
+      after: ' has faded.',
+      tooltipTitle: 'Buff Expired',
+      tooltipLines: ['The effect is no longer active and its bonuses no longer apply.'],
     }
   }
 
@@ -194,8 +274,8 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
         </div>
         <div class="tick">Health: {{ playerHp }} / {{ maxHp }}</div>
         <ProgressBar :value="playerHp" :max="maxHp" variant="hp" />
-        <button class="ghost" :disabled="!canCastArcaneBurst" @click="castArcaneBurst">
-          Arcane Burst ({{ arcaneBurstCost }} Mana)
+        <button class="ghost" :disabled="!canCastSelectedSpell" @click="castSelectedSpell">
+          Cast {{ selectedSpell?.name }} ({{ selectedSpellManaCost }} Mana)
         </button>
       </div>
     </header>
@@ -245,62 +325,178 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
         </div>
 
         <div class="enemy-card">
-          <div>
+          <div class="npc-column">
+            <div>
+              <InfoTooltip>
+                <template #trigger>
+                  <div class="item-title">{{ combat.enemyName }}</div>
+                </template>
+                <template #content>
+                  <div class="info-tooltip-title">{{ combat.enemyName }}</div>
+                  <div class="info-tooltip-line">Current Zone: {{ currentZone.name }}</div>
+                  <div class="info-tooltip-line">Enemy Level: {{ combat.enemyLevel }}</div>
+                  <div class="info-tooltip-line">Enemy Power: {{ Math.floor(combat.enemyPower) }}</div>
+                  <div class="info-tooltip-line">Enemy HP: {{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
+                  <div class="info-tooltip-line info-tooltip-muted">Drop table:</div>
+                  <div
+                    v-for="entry in currentEnemyDropPreview"
+                    :key="`enemy-drop-${entry}`"
+                    class="info-tooltip-line info-tooltip-muted"
+                  >
+                    {{ entry }}
+                  </div>
+                  <div class="info-tooltip-line info-tooltip-muted">Defeat rewards are scaled by enemy level and type.</div>
+                </template>
+              </InfoTooltip>
+              <div class="item-desc">Zone: {{ currentZone.name }}</div>
+            </div>
+            <div class="enemy-stats">
+              <div class="label">Enemy Level</div>
+              <div class="value">{{ combat.enemyLevel }}</div>
+            </div>
+            <div class="enemy-hp">
+              <div class="label">Enemy Health</div>
+              <div class="value">{{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
+              <ProgressBar :value="combat.enemyHp" :max="combat.enemyMaxHp" variant="enemy" />
+            </div>
             <InfoTooltip>
               <template #trigger>
-                <div class="item-title">{{ combat.enemyName }}</div>
+                <div class="reward-hint">
+                  Rewards: +{{ combatRewards.exp }} XP, Drops: {{ currentEnemyDropPreview.join(', ') || 'none' }},
+                  +{{ combatRewards.skillExp }} Combat XP / kill
+                </div>
               </template>
               <template #content>
-                <div class="info-tooltip-title">{{ combat.enemyName }}</div>
-                <div class="info-tooltip-line">Current Zone: {{ currentZone.name }}</div>
-                <div class="info-tooltip-line">Enemy Level: {{ combat.enemyLevel }}</div>
-                <div class="info-tooltip-line">Enemy Power: {{ Math.floor(combat.enemyPower) }}</div>
-                <div class="info-tooltip-line">Enemy HP: {{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
-                <div class="info-tooltip-line info-tooltip-muted">Drop table:</div>
+                <div class="info-tooltip-title">Current Enemy Rewards</div>
+                <div class="info-tooltip-line">Character XP: +{{ combatRewards.exp }}</div>
+                <div class="info-tooltip-line">Guaranteed currency floor: {{ formatCurrency(combatRewards.copper) }}</div>
+                <div class="info-tooltip-line info-tooltip-muted">Drop table entries:</div>
                 <div
                   v-for="entry in currentEnemyDropPreview"
-                  :key="`enemy-drop-${entry}`"
+                  :key="`reward-drop-${entry}`"
                   class="info-tooltip-line info-tooltip-muted"
                 >
                   {{ entry }}
                 </div>
-                <div class="info-tooltip-line info-tooltip-muted">Defeat rewards are scaled by enemy level and type.</div>
+                <div class="info-tooltip-line">Combat Skill XP: +{{ combatRewards.skillExp }}</div>
+                <div class="info-tooltip-line">Stat XP per stat: +{{ combatRewards.statExp }}</div>
               </template>
             </InfoTooltip>
-            <div class="item-desc">Zone: {{ currentZone.name }}</div>
           </div>
-          <div class="enemy-stats">
-            <div class="label">Enemy Level</div>
-            <div class="value">{{ combat.enemyLevel }}</div>
-          </div>
-          <div class="enemy-hp">
-            <div class="label">Enemy Health</div>
-            <div class="value">{{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
-            <ProgressBar :value="combat.enemyHp" :max="combat.enemyMaxHp" variant="enemy" />
-          </div>
-          <InfoTooltip>
-            <template #trigger>
-              <div class="reward-hint">
-                Rewards: +{{ combatRewards.exp }} XP, Drops: {{ currentEnemyDropPreview.join(', ') || 'none' }},
-                +{{ combatRewards.skillExp }} Combat XP / kill
-              </div>
-            </template>
-            <template #content>
-              <div class="info-tooltip-title">Current Enemy Rewards</div>
-              <div class="info-tooltip-line">Character XP: +{{ combatRewards.exp }}</div>
-              <div class="info-tooltip-line">Guaranteed currency floor: {{ formatCurrency(combatRewards.copper) }}</div>
-              <div class="info-tooltip-line info-tooltip-muted">Drop table entries:</div>
-              <div
-                v-for="entry in currentEnemyDropPreview"
-                :key="`reward-drop-${entry}`"
-                class="info-tooltip-line info-tooltip-muted"
+
+        </div>
+      </div>
+
+      <div class="panel spellbook-panel">
+        <div class="spellbook">
+          <div class="combat-header">
+            <div>
+              <h2>Spellbook</h2>
+              <div class="item-desc">Learn, select, and monitor spell effects.</div>
+            </div>
+            <div class="spell-filters">
+              <label
+                v-for="option in spellTypeFilterOptions"
+                :key="`spell-filter-${option.id}`"
+                class="filter-pill"
               >
-                {{ entry }}
+                <input v-model="spellTypeFilter" type="radio" :value="option.id" name="spell-type" />
+                <span>{{ option.label }}</span>
+              </label>
+            </div>
+          </div>
+          <div class="spell-grid">
+            <div
+              v-for="spell in filteredSpells"
+              :key="spell.id"
+              class="spell-card"
+              :class="{ selected: selectedSpellId === spell.id }"
+            >
+              <div>
+                <InfoTooltip>
+                  <template #trigger>
+                    <div class="item-title">{{ spell.name }}</div>
+                  </template>
+                  <template #content>
+                    <div class="info-tooltip-title">{{ spell.name }}</div>
+                    <div class="info-tooltip-line">{{ spell.description }}</div>
+                    <div class="info-tooltip-line">Required Arcana: {{ spell.requiredArcanaLevel }}</div>
+                    <div class="info-tooltip-line">Mana cost: {{ spell.manaCost }}</div>
+                    <div class="info-tooltip-line">Level: {{ spellbook[spell.id]?.level ?? 0 }} / {{ spell.maxLevel }}</div>
+                    <div class="info-tooltip-line" v-if="spell.effectType === 'damage'">
+                      Base damage: {{ spell.baseDamage }} + {{ spell.damagePerLevel }} per level
+                    </div>
+                    <div class="info-tooltip-line" v-if="spell.effectType === 'damage'">
+                      Scaling: Int {{ spell.statScaling.intelligence }}, Spirit {{ spell.statScaling.spirit }}, Arcana {{ spell.skillScaling.arcana }}, Combat {{ spell.skillScaling.combat }}
+                    </div>
+                    <div class="info-tooltip-line" v-if="spell.effectType === 'healing'">
+                      Healing scales from spell power and regen bonuses.
+                    </div>
+                    <div class="info-tooltip-line" v-if="spell.effectType === 'buff' && spell.buffProfile">
+                      Duration: {{ spell.buffProfile.durationTicks }} ticks base
+                    </div>
+                    <div class="info-tooltip-line" v-if="spell.effectType === 'buff' && spell.buffProfile">
+                      Buffs: +{{ formatPercent(spell.buffProfile.combatDamageBonus ?? 0) }} combat, +{{ formatPercent(spell.buffProfile.spellPowerBonus ?? 0) }} spell, +{{ formatPercent(spell.buffProfile.damageReductionBonus ?? 0) }} reduction
+                    </div>
+                  </template>
+                </InfoTooltip>
+                <div class="item-desc">{{ spell.description }}</div>
+                <div class="item-desc">
+                  Type:
+                  {{
+                    spell.effectType === 'healing'
+                      ? 'Healing'
+                      : spell.effectType === 'buff'
+                        ? 'Buff'
+                        : 'Damage'
+                  }}
+                </div>
+                <div class="item-desc">Arcana required: {{ spell.requiredArcanaLevel }}</div>
+                <div class="item-desc">Mana: {{ spell.manaCost }}</div>
+                <div class="item-desc">
+                  Level: {{ spellbook[spell.id]?.level ?? 0 }} / {{ spell.maxLevel }}
+                </div>
               </div>
-              <div class="info-tooltip-line">Combat Skill XP: +{{ combatRewards.skillExp }}</div>
-              <div class="info-tooltip-line">Stat XP per stat: +{{ combatRewards.statExp }}</div>
-            </template>
-          </InfoTooltip>
+              <div class="spell-actions">
+                <button
+                  class="toggle"
+                  :disabled="spellbook[spell.id]?.learned || skills.Arcana.level < spell.requiredArcanaLevel"
+                  @click="learnSpell(spell.id)"
+                >
+                  {{ spellbook[spell.id]?.learned ? 'Learned' : 'Learn' }}
+                </button>
+                <button
+                  class="toggle"
+                  :disabled="!spellbook[spell.id]?.learned"
+                  @click="setSelectedSpell(spell.id)"
+                >
+                  {{ selectedSpellId === spell.id ? 'Selected' : 'Select' }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="active-buffs">
+            <div class="label">Active Buffs</div>
+            <div v-if="activeBuffs.length === 0" class="item-desc">None</div>
+            <div v-else class="buff-grid">
+              <div v-for="buff in activeBuffs" :key="buff.id" class="buff-card">
+                <div class="item-title">{{ buff.name }}</div>
+                <div class="item-desc">Duration: {{ buff.remainingTicks }} ticks</div>
+                <div class="item-desc" v-if="buff.combatDamageBonus > 0">
+                  Combat damage: +{{ formatPercent(buff.combatDamageBonus) }}
+                </div>
+                <div class="item-desc" v-if="buff.spellPowerBonus > 0">
+                  Spell power: +{{ formatPercent(buff.spellPowerBonus) }}
+                </div>
+                <div class="item-desc" v-if="buff.damageReductionBonus > 0">
+                  Damage reduction: +{{ formatPercent(buff.damageReductionBonus) }}
+                </div>
+              </div>
+            </div>
+            <div class="item-desc" v-if="activeBuffs.length > 0">
+              Totals: +{{ formatPercent(activeBuffCombatBonus) }} combat, +{{ formatPercent(activeBuffSpellBonus) }} spell, +{{ formatPercent(activeBuffReductionBonus) }} reduction
+            </div>
+          </div>
         </div>
       </div>
 
@@ -411,6 +607,13 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
   background: rgba(21, 30, 47, 0.8);
   border: 1px solid rgba(90, 110, 140, 0.3);
   display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.npc-column {
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
@@ -422,6 +625,66 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
 
 .enemy-hp .value {
   font-size: 1.1rem;
+}
+
+.spellbook {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.spell-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.spell-filters {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.spell-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  border-radius: 12px;
+  background: rgba(13, 20, 33, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
+.spell-card.selected {
+  border-color: rgba(116, 210, 255, 0.75);
+}
+
+.spell-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.active-buffs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.buff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.buff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6rem;
+  border-radius: 12px;
+  background: rgba(13, 20, 33, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
 }
 
 .reward-hint {

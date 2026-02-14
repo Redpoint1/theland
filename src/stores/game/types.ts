@@ -87,6 +87,40 @@ export interface EnemyDropEntry {
   currency?: 'copper'
 }
 
+export interface SpellDefinition {
+  id: string
+  name: string
+  description: string
+  effectType: 'damage' | 'healing' | 'buff'
+  maxLevel: number
+  requiredArcanaLevel: number
+  manaCost: number
+  baseDamage: number
+  damagePerLevel: number
+  statScaling: {
+    intelligence: number
+    spirit: number
+  }
+  skillScaling: {
+    arcana: number
+    combat: number
+  }
+  buffProfile?: {
+    durationTicks: number
+    combatDamageBonus?: number
+    damageReductionBonus?: number
+    spellPowerBonus?: number
+  }
+}
+
+export interface SpellProgress {
+  id: string
+  learned: boolean
+  level: number
+  exp: number
+  expToNext: number
+}
+
 export type ItemQuality = 'Common' | 'Uncommon' | 'Rare' | 'Epic'
 export type ItemType = 'Equip' | 'Resource' | 'Consumable' | 'Quest'
 
