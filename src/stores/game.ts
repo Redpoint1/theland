@@ -221,6 +221,7 @@ export const useGameStore = defineStore('game', () => {
     removeItem,
     getItemQuantity,
     sellFromSlot,
+    consumeFromSlot,
     getItemDef,
   } = useInventoryLogic({
     itemDefs,
@@ -231,6 +232,59 @@ export const useGameStore = defineStore('game', () => {
     spendCurrency,
     getCurrencyCopper: () => currency.copper,
   })
+
+  const clampPlayerResources = () => {
+    playerHp.value = Math.min(playerHp.value, maxHp.value)
+    mana.value = Math.min(mana.value, maxMana.value)
+  }
+
+  const useConsumableFromSlot = (slotId: number) => {
+    const slot = inventory.find((entry) => entry.id === slotId)
+    if (!slot || !slot.itemId || slot.quantity <= 0) return
+    const def = getItemDef(slot.itemId)
+    if (!def || def.type !== 'Consumable') return
+
+    const consumedItemId = consumeFromSlot(slotId, 1)
+    if (!consumedItemId) return
+
+    if (consumedItemId === 'minor-elixir') {
+      playerHp.value += 35
+      addCharacterExp(8)
+      addActionLog('reward', 'Used Minor Elixir. +35 HP, +8 XP.')
+    } else if (consumedItemId === 'focus-draught') {
+      mana.value += 30
+      addCharacterExp(12)
+      addActionLog('reward', 'Used Focus Draught. +30 Mana, +12 XP.')
+    } else if (consumedItemId === 'warding-tonic') {
+      playerHp.value += 55
+      mana.value += 20
+      addActionLog('reward', 'Used Warding Tonic. +55 HP, +20 Mana.')
+    } else if (consumedItemId === 'fury-philter') {
+      addCharacterExp(26)
+      addSkillExp('Combat', 20)
+      addActionLog('reward', 'Used Fury Philter. +26 XP, +20 Combat XP.')
+    } else if (consumedItemId === 'clarity-elixir') {
+      mana.value += 60
+      addSkillExp('Arcana', 26)
+      addActionLog('reward', 'Used Clarity Elixir. +60 Mana, +26 Arcana XP.')
+    } else if (consumedItemId === 'frostguard-draught') {
+      playerHp.value += 90
+      addStatExp('Vitality', 18)
+      addActionLog('reward', 'Used Frostguard Draught. +90 HP, +18 Vitality XP.')
+    } else if (consumedItemId === 'dragonfire-tonic') {
+      addCharacterExp(60)
+      addSkillExp('Combat', 45)
+      addSkillExp('Arcana', 30)
+      addActionLog('reward', 'Used Dragonfire Tonic. +60 XP, +45 Combat XP, +30 Arcana XP.')
+    } else if (consumedItemId === 'rift-essence') {
+      playerHp.value += 130
+      mana.value += 130
+      addCharacterExp(100)
+      addActionLog('reward', 'Used Rift Essence. +130 HP, +130 Mana, +100 XP.')
+    }
+
+    clampPlayerResources()
+  }
 
   const seedInventory = () => {
     seedInventoryItems.forEach((entry) => {
@@ -362,6 +416,7 @@ export const useGameStore = defineStore('game', () => {
     removeItem,
     getItemQuantity,
     sellFromSlot,
+    useConsumableFromSlot,
     getItemDef,
     zones,
     combat,

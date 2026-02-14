@@ -101,6 +101,7 @@ const sellAmounts: Array<number | 'all'> = [1, 10, 100, 1000, 'all']
             :slot="slot"
             :sell-amounts="sellAmounts"
             :get-item-def="getItemDef"
+            @use="game.useConsumableFromSlot"
             @sell="game.sellFromSlot"
           />
         </div>

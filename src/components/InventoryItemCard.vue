@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'sell', slotId: number, amount: number | 'all'): void
+  (e: 'use', slotId: number): void
 }>()
 
 const itemDef = computed(() =>
@@ -17,6 +18,7 @@ const itemDef = computed(() =>
 )
 
 const canSell = computed(() => !!props.slot.itemId && props.slot.quantity > 0)
+const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumable')
 </script>
 
 <template>
@@ -34,6 +36,7 @@ const canSell = computed(() => !!props.slot.itemId && props.slot.quantity > 0)
         <div class="inventory-price">{{ itemDef.priceCopper }}c</div>
       </div>
       <div class="inventory-actions">
+        <button class="toggle" :disabled="!canUse" @click="emit('use', slot.id)">Use</button>
         <button
           v-for="amount in sellAmounts"
           :key="amount"
@@ -47,6 +50,7 @@ const canSell = computed(() => !!props.slot.itemId && props.slot.quantity > 0)
       <div class="inventory-tooltip">
         <div class="tooltip-title">{{ itemDef.name }}</div>
         <div class="tooltip-body">{{ itemDef.description }}</div>
+        <div v-if="itemDef.effectDescription" class="tooltip-body">Effect: {{ itemDef.effectDescription }}</div>
         <div class="tooltip-meta">
           Stack: {{ itemDef.maxStack }} · {{ itemDef.type }} / {{ itemDef.subtype }}
         </div>

@@ -90,6 +90,7 @@ export interface ItemDef {
   type: ItemType
   subtype: string
   description: string
+  effectDescription?: string
   maxStack: number
   priceCopper: number
 }

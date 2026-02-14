@@ -135,6 +135,22 @@ export const useInventoryLogic = ({
     }
   }
 
+  const consumeFromSlot = (slotId: number, amount = 1) => {
+    const slot = inventory.find((entry) => entry.id === slotId)
+    if (!slot || !slot.itemId || amount <= 0) return undefined
+    const consumeQty = Math.min(slot.quantity, amount)
+    if (consumeQty <= 0) return undefined
+    const consumedItemId = slot.itemId
+    slot.quantity -= consumeQty
+
+    if (slot.quantity <= 0) {
+      const index = inventory.findIndex((entry) => entry.id === slotId)
+      if (index >= 0) inventory.splice(index, 1)
+    }
+
+    return consumedItemId
+  }
+
   const inventorySlots = computed<InventorySlot[]>(() => {
     const slots = [...inventory]
     const emptyCount = Math.max(0, maxInventorySlots.value - slots.length)
@@ -155,6 +171,7 @@ export const useInventoryLogic = ({
     removeItem,
     getItemQuantity,
     sellFromSlot,
+    consumeFromSlot,
     getItemDef,
   }
 }
