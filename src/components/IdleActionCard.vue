@@ -79,3 +79,65 @@ const describeEntries = (entries?: Record<string, number>) =>
     </div>
   </div>
 </template>
+
+<style scoped>
+.action-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(21, 30, 47, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.action-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.toggle {
+  background: rgba(69, 85, 110, 0.4);
+  color: #e6e9f2;
+  border: 1px solid rgba(121, 145, 180, 0.4);
+  padding: 0.4rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle.active {
+  background: linear-gradient(120deg, #74d2ff, #6ff2c5);
+  color: #0b111b;
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-hint {
+  font-size: 0.75rem;
+  color: #8fa2c6;
+}
+
+@media (max-width: 720px) {
+  .action-card,
+  .action-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+</style>

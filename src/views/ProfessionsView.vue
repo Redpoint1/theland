@@ -239,3 +239,54 @@ const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
     </section>
   </main>
 </template>
+
+<style scoped>
+@import '../styles/view-shell.css';
+
+.subtitle {
+  max-width: 520px;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.toggle {
+  background: rgba(69, 85, 110, 0.4);
+  color: #e6e9f2;
+  border: 1px solid rgba(121, 145, 180, 0.4);
+  padding: 0.4rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.toggle.active {
+  background: linear-gradient(120deg, #74d2ff, #6ff2c5);
+  color: #0b111b;
+}
+
+.log-focus {
+  color: #c8f0ff;
+  border-bottom: 1px dotted rgba(116, 210, 255, 0.7);
+}
+
+.log-time {
+  color: #7f92b6;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-type {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: #9fb0d3;
+}
+
+.log-message {
+  color: #d9e3ff;
+}
+
+</style>

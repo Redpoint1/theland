@@ -100,3 +100,76 @@ const isMaxLevel = computed(() => props.profession.level >= props.profession.max
     </div>
   </div>
 </template>
+
+<style scoped>
+.panel {
+  background: rgba(14, 20, 33, 0.9);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid rgba(80, 98, 130, 0.25);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.profession-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.profession-meta {
+  text-align: right;
+}
+
+.label {
+  color: #8fa2c6;
+  font-size: 0.85rem;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.exp-block {
+  min-width: 200px;
+  flex: 1;
+}
+
+.profession-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.item-hint {
+  font-size: 0.75rem;
+  color: #7d90b8;
+}
+
+@media (max-width: 720px) {
+  .profession-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profession-meta {
+    text-align: left;
+  }
+}
+</style>

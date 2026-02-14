@@ -209,3 +209,116 @@ onBeforeUnmount(() => {
     <RouterView />
   </div>
 </template>
+
+<style scoped>
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 18px;
+  background: rgba(14, 20, 33, 0.9);
+  border: 1px solid rgba(80, 98, 130, 0.25);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.brand {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: #c7d4f2;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #c7d4f2;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  border-color: rgba(240, 197, 102, 0.5);
+  color: #f0c566;
+}
+
+.nav-link.router-link-active {
+  background: rgba(116, 210, 255, 0.2);
+  border-color: rgba(116, 210, 255, 0.8);
+  color: #c8f0ff;
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 16px;
+  background: rgba(10, 16, 28, 0.9);
+  border: 1px solid rgba(80, 98, 130, 0.25);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+}
+
+.hud-item {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(24, 34, 52, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
+.hud-item.wide {
+  min-width: 220px;
+  justify-content: space-between;
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fa2c6;
+}
+
+.hud-value {
+  font-weight: 600;
+  color: #e9f2ff;
+}
+
+@media (max-width: 720px) {
+  .top-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+  }
+
+  .hud {
+    align-items: flex-start;
+  }
+
+  .hud-item.wide {
+    min-width: 100%;
+  }
+}
+</style>

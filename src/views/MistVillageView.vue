@@ -476,3 +476,147 @@ const selectedAreaMeta = computed(() => areas.find((area) => area.id === selecte
     </section>
   </main>
 </template>
+
+<style scoped>
+@import '../styles/view-shell.css';
+
+.subtitle {
+  max-width: 620px;
+}
+
+.village-grid {
+  grid-template-columns: 1.1fr 1.4fr 0.9fr;
+}
+
+.zone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.zone-card {
+  border-radius: 14px;
+  padding: 0.75rem;
+  text-align: left;
+  background: rgba(21, 30, 47, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.zone-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 197, 102, 0.6);
+}
+
+.zone-card.selected {
+  border-color: rgba(116, 210, 255, 0.9);
+  box-shadow: 0 10px 18px rgba(116, 210, 255, 0.2);
+}
+
+.village-area-content {
+  gap: 1rem;
+}
+
+.village-shop-list,
+.village-sell-list,
+.village-shrine-actions,
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.village-shop-row,
+.profession-action {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.8rem;
+  border-radius: 14px;
+  background: rgba(21, 30, 47, 0.75);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+}
+
+.profession-action.locked {
+  opacity: 0.55;
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.item-hint {
+  font-size: 0.75rem;
+  color: #7d90b8;
+}
+
+.label {
+  color: #8fa2c6;
+  font-size: 0.85rem;
+}
+
+.toggle {
+  background: rgba(69, 85, 110, 0.4);
+  color: #e6e9f2;
+  border: 1px solid rgba(121, 145, 180, 0.4);
+  padding: 0.4rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle.active {
+  background: linear-gradient(120deg, #74d2ff, #6ff2c5);
+  color: #0b111b;
+}
+
+.village-log-list {
+  max-height: 320px;
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: rgba(12, 18, 30, 0.9);
+  border: 1px solid rgba(60, 80, 110, 0.3);
+}
+
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.log-empty {
+  color: #7f92b6;
+  font-size: 0.85rem;
+}
+
+.log-message {
+  color: #d9e3ff;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .village-shop-row,
+  .profession-action {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .village-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

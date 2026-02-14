@@ -308,3 +308,103 @@ const parseActionLog = (log: { message: string; type: string }): ParsedActionLog
     </section>
   </main>
 </template>
+
+<style scoped>
+@import '../styles/view-shell.css';
+
+.subtitle {
+  max-width: 520px;
+}
+
+.ghost {
+  background: transparent;
+  color: #f0c566;
+  border: 1px solid rgba(240, 197, 102, 0.5);
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.label {
+  color: #8fa2c6;
+  font-size: 0.85rem;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.exp-block {
+  min-width: 200px;
+  flex: 1;
+}
+
+.hp-block {
+  margin-top: 0.5rem;
+}
+
+.currency {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(80px, 1fr));
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.currency-label {
+  display: block;
+  color: #8fa2c6;
+  font-size: 0.75rem;
+}
+
+.currency-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.actions .list {
+  gap: 0.75rem;
+}
+
+.log-focus {
+  color: #c8f0ff;
+  border-bottom: 1px dotted rgba(116, 210, 255, 0.7);
+}
+
+.log-time {
+  color: #7f92b6;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-type {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: #9fb0d3;
+}
+
+.log-message {
+  color: #d9e3ff;
+}
+
+</style>

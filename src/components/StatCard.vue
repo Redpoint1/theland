@@ -83,3 +83,71 @@ const derivedLines = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.item-value {
+  text-align: right;
+  min-width: 120px;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.item-hint {
+  font-size: 0.75rem;
+  color: #7d90b8;
+}
+
+.stat-controls {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.ghost {
+  background: transparent;
+  color: #f0c566;
+  border: 1px solid rgba(240, 197, 102, 0.5);
+  border-radius: 10px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .list-item,
+  .item-value {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .stat-controls {
+    justify-content: flex-start;
+  }
+}
+</style>

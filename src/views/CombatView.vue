@@ -331,3 +331,187 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
     </section>
   </main>
 </template>
+
+<style scoped>
+@import '../styles/view-shell.css';
+
+.subtitle {
+  max-width: 520px;
+}
+
+.combat-buttons {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.combat-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.zone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.zone-card {
+  border-radius: 14px;
+  padding: 0.75rem;
+  text-align: left;
+  background: rgba(21, 30, 47, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.zone-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 197, 102, 0.6);
+}
+
+.zone-card.selected {
+  border-color: rgba(116, 210, 255, 0.9);
+  box-shadow: 0 10px 18px rgba(116, 210, 255, 0.2);
+}
+
+.zone-level {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #9fb0d3;
+}
+
+.enemy-card {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(21, 30, 47, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.enemy-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.enemy-hp .value {
+  font-size: 1.1rem;
+}
+
+.reward-hint {
+  font-size: 0.85rem;
+  color: #9fb0d3;
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.label {
+  color: #8fa2c6;
+  font-size: 0.85rem;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.toggle {
+  background: rgba(69, 85, 110, 0.4);
+  color: #e6e9f2;
+  border: 1px solid rgba(121, 145, 180, 0.4);
+  padding: 0.4rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle.active {
+  background: linear-gradient(120deg, #74d2ff, #6ff2c5);
+  color: #0b111b;
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ghost {
+  background: transparent;
+  color: #f0c566;
+  border: 1px solid rgba(240, 197, 102, 0.5);
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.log-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(24, 34, 52, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  color: #c7d4f2;
+  cursor: pointer;
+}
+
+.filter-pill input {
+  accent-color: #74d2ff;
+}
+
+.log-focus {
+  color: #c8f0ff;
+  border-bottom: 1px dotted rgba(116, 210, 255, 0.7);
+}
+
+.log-time {
+  color: #7f92b6;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-type {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: #9fb0d3;
+}
+
+.log-message {
+  color: #d9e3ff;
+}
+
+@media (max-width: 720px) {
+  .combat-buttons {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+}
+</style>

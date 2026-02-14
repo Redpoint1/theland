@@ -66,3 +66,89 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
     <div v-else class="inventory-empty">Empty Slot</div>
   </div>
 </template>
+
+<style scoped>
+.inventory-card {
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: rgba(21, 30, 47, 0.7);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  min-height: 160px;
+  position: relative;
+  overflow: hidden;
+}
+
+.inventory-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.inventory-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #b8c3de;
+}
+
+.inventory-qty {
+  font-weight: 600;
+  color: #e9f2ff;
+}
+
+.inventory-quality {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+}
+
+.inventory-price {
+  font-weight: 600;
+}
+
+.inventory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.toggle {
+  background: rgba(69, 85, 110, 0.4);
+  color: #e6e9f2;
+  border: 1px solid rgba(121, 145, 180, 0.4);
+  padding: 0.35rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inventory-empty {
+  color: #7f92b6;
+  font-size: 0.85rem;
+  text-align: center;
+  padding-top: 2rem;
+}
+</style>

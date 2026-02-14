@@ -109,3 +109,53 @@ const sellAmounts: Array<number | 'all'> = [1, 10, 100, 1000, 'all']
     </section>
   </main>
 </template>
+
+<style scoped>
+@import '../styles/view-shell.css';
+
+.subtitle {
+  max-width: 520px;
+}
+.combat-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.item-desc {
+  font-size: 0.85rem;
+  color: #8fa2c6;
+}
+
+.inventory-sort {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #9fb0d3;
+}
+
+.inventory-sort select {
+  margin-left: 0.35rem;
+  background: rgba(24, 34, 52, 0.8);
+  border: 1px solid rgba(90, 110, 140, 0.3);
+  color: #e9f2ff;
+  border-radius: 8px;
+  padding: 0.2rem 0.5rem;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .combat-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
