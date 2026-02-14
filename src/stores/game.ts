@@ -100,6 +100,7 @@ export const useGameStore = defineStore('game', () => {
 
   const combat = reactive({
     zoneId: defaultZone.id,
+    enemyId: defaultEnemy.id,
     enemyName: defaultEnemy.name,
     enemyLevel: defaultZone.levelMin,
     enemyHp: 40,
@@ -333,6 +334,7 @@ export const useGameStore = defineStore('game', () => {
 
   const {
     currentZone,
+    currentEnemyDropPreview,
     maxHp,
     spawnEnemy,
     setZone,
@@ -356,6 +358,8 @@ export const useGameStore = defineStore('game', () => {
     addCombatLog,
     addCharacterExp,
     addCurrency,
+    addItem,
+    getItemDef,
     addSkillExp,
     addStatExp,
     spendMana,
@@ -436,6 +440,7 @@ export const useGameStore = defineStore('game', () => {
     statList,
     skillList,
     currentZone,
+    currentEnemyDropPreview,
     skillBonuses,
     currencyBreakdown,
     formatCopperToCurrency,

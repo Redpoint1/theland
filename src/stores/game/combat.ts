@@ -1,9 +1,11 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
+import { enemyDropTables } from './data'
 import { formatCopperToCurrency } from './progression'
 import type { SkillBonuses } from './progression'
 import type {
   ActiveTask,
   CombatLogType,
+  EnemyDropEntry,
   EnemyType,
   Skill,
   SkillKey,
@@ -14,6 +16,7 @@ import type {
 
 export interface CombatState {
   zoneId: string
+  enemyId: string
   enemyName: string
   enemyLevel: number
   enemyHp: number
@@ -43,6 +46,8 @@ export interface CombatLogicDeps {
   addCombatLog: (type: CombatLogType, message: string) => void
   addCharacterExp: (amount: number) => void
   addCurrency: (copperGain?: number) => void
+  addItem: (itemId: string, amount: number) => void
+  getItemDef: (itemId: string) => { name: string } | undefined
   addSkillExp: (key: SkillKey, amount: number) => void
   addStatExp: (key: StatKey, amount: number) => void
   spendMana: (amount: number) => boolean
@@ -65,6 +70,8 @@ export const useCombatLogic = ({
   addCombatLog,
   addCharacterExp,
   addCurrency,
+  addItem,
+  getItemDef,
   addSkillExp,
   addStatExp,
   spendMana,
@@ -73,6 +80,17 @@ export const useCombatLogic = ({
 }: CombatLogicDeps) => {
   const currentZone = computed((): Zone => zones.find((zone) => zone.id === combat.zoneId) ?? defaultZone)
   const maxHp = computed(() => Math.floor(character.level * 8 + stats.Vitality.value * 12))
+  const currentEnemyDrops = computed<EnemyDropEntry[]>(() => enemyDropTables[combat.enemyId] ?? [])
+  const currentEnemyDropPreview = computed(() =>
+    currentEnemyDrops.value.map((drop) => {
+      const chancePercent = Math.round(drop.chance * 100)
+      if (drop.currency === 'copper') {
+        return `${chancePercent}% ${formatCopperToCurrency(drop.amount)}`
+      }
+      const itemName = getItemDef(drop.itemId ?? '')?.name ?? drop.itemId ?? 'Unknown item'
+      return `${chancePercent}% ${itemName} x${drop.amount}`
+    }),
+  )
 
   const setActiveTask = (type: ActiveTask['type']) => {
     activeTask.value = { type }
@@ -98,13 +116,16 @@ export const useCombatLogic = ({
     const rewardScale = (1 + level * 0.06) * enemy.rewardFactor
 
     combat.enemyLevel = level
+    combat.enemyId = enemy.id
     combat.enemyName = enemy.name
     combat.enemyPower = zone.basePower * enemy.powerFactor + level * 1.8
     combat.enemyMaxHp = baseHp
     combat.enemyHp = baseHp
 
     combatRewards.exp = Math.floor(zone.baseRewards.exp * rewardScale)
-    combatRewards.copper = Math.floor(zone.baseRewards.copper * rewardScale)
+    combatRewards.copper = (enemyDropTables[enemy.id] ?? [])
+      .filter((drop) => drop.currency === 'copper' && drop.chance >= 1)
+      .reduce((total, drop) => total + drop.amount, 0)
     combatRewards.skillExp = Math.floor(zone.baseRewards.skillExp * rewardScale)
     combatRewards.statExp = Math.floor(zone.baseRewards.statExp * rewardScale)
 
@@ -114,14 +135,54 @@ export const useCombatLogic = ({
     )
   }
 
+  const rollEnemyDrops = (enemyId: string) => {
+    const drops = enemyDropTables[enemyId] ?? []
+    const itemTotals = new Map<string, number>()
+    let rawCopperTotal = 0
+
+    drops.forEach((drop) => {
+      const chance = Math.max(0, Math.min(1, drop.chance))
+      if (Math.random() > chance) return
+
+      if (drop.currency === 'copper') {
+        rawCopperTotal += drop.amount
+        return
+      }
+
+      if (!drop.itemId) return
+      itemTotals.set(drop.itemId, (itemTotals.get(drop.itemId) ?? 0) + drop.amount)
+    })
+
+    return { itemTotals, rawCopperTotal }
+  }
+
   const handleEnemyDefeated = () => {
-    const rewardSummary = `+${combatRewards.exp} XP, +${formatCopperToCurrency(combatRewards.copper)}`
+    const { itemTotals, rawCopperTotal } = rollEnemyDrops(combat.enemyId)
+    const appliedCopper = rawCopperTotal > 0
+      ? Math.floor(rawCopperTotal * skillBonuses.value.currencyMultiplier)
+      : 0
+
+    if (rawCopperTotal > 0) {
+      addCurrency(rawCopperTotal)
+    }
+
+    const dropSummary: string[] = []
+    if (appliedCopper > 0) {
+      dropSummary.push(`${formatCopperToCurrency(appliedCopper)}`)
+    }
+
+    itemTotals.forEach((amount, itemId) => {
+      addItem(itemId, amount)
+      const name = getItemDef(itemId)?.name ?? itemId
+      dropSummary.push(`${name} x${amount}`)
+    })
+
+    const dropsText = dropSummary.length ? dropSummary.join(', ') : 'none'
     addCombatLog(
       'kill',
-      `Defeated ${combat.enemyName} (Lv. ${combat.enemyLevel}). Rewards: ${rewardSummary}.`,
+      `Defeated ${combat.enemyName} (Lv. ${combat.enemyLevel}). Rewards: +${combatRewards.exp} XP, Drops: ${dropsText}.`,
     )
     addCharacterExp(combatRewards.exp)
-    addCurrency(combatRewards.copper)
     addSkillExp('Combat', combatRewards.skillExp)
     addSkillExp('Survival', Math.floor(combatRewards.skillExp * 0.4))
     addStatExp('Strength', combatRewards.statExp)
@@ -223,6 +284,8 @@ export const useCombatLogic = ({
 
   return {
     currentZone,
+    currentEnemyDrops,
+    currentEnemyDropPreview,
     maxHp,
     spawnEnemy,
     setZone,

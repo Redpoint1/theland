@@ -13,6 +13,7 @@ const {
   combatRewards,
   combatLogs,
   currentZone,
+  currentEnemyDropPreview,
   character,
   stats,
   skills,
@@ -75,18 +76,18 @@ interface ParsedCombatLog {
 const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
   const message = log.message
 
-  const defeated = message.match(/^Defeated (.+) \(Lv\. (\d+)\)\. Rewards: \+(\d+) XP, \+(.+)\.$/)
+  const defeated = message.match(/^Defeated (.+) \(Lv\. (\d+)\)\. Rewards: \+(\d+) XP, Drops: (.+)\.$/)
   if (defeated) {
-    const [, enemyName, levelText, xpText, currencyText] = defeated
+    const [, enemyName, levelText, xpText, dropsText] = defeated
     return {
       before: 'Defeated ',
       focus: enemyName,
-      after: ` (Lv. ${levelText}). Rewards: +${xpText} XP, +${currencyText}.`,
+      after: ` (Lv. ${levelText}). Rewards: +${xpText} XP, Drops: ${dropsText}.`,
       tooltipTitle: `${enemyName} Defeated`,
       tooltipLines: [
         `Enemy level: ${levelText}`,
         `Character XP reward: +${xpText}`,
-        `Currency reward: +${currencyText}`,
+        `Drop outcome: ${dropsText}`,
         'Combat XP and stat XP are also awarded from zone scaling.',
       ],
     }
@@ -226,7 +227,7 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
                 <div class="info-tooltip-line">Level Range: {{ zone.levelMin }}-{{ zone.levelMax }}</div>
                 <div class="info-tooltip-line">Base Power: {{ zone.basePower }}</div>
                 <div class="info-tooltip-line">Base Reward XP: {{ zone.baseRewards.exp }}</div>
-                <div class="info-tooltip-line">Base Reward Currency: {{ formatCurrency(zone.baseRewards.copper) }}</div>
+                <div class="info-tooltip-line">Drop Table: Enemy-specific (chance based)</div>
                 <div class="info-tooltip-line">Base Combat XP: {{ zone.baseRewards.skillExp }}</div>
                 <div class="info-tooltip-line info-tooltip-muted">Enemies:</div>
                 <div
@@ -255,6 +256,14 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
                 <div class="info-tooltip-line">Enemy Level: {{ combat.enemyLevel }}</div>
                 <div class="info-tooltip-line">Enemy Power: {{ Math.floor(combat.enemyPower) }}</div>
                 <div class="info-tooltip-line">Enemy HP: {{ combat.enemyHp }} / {{ combat.enemyMaxHp }}</div>
+                <div class="info-tooltip-line info-tooltip-muted">Drop table:</div>
+                <div
+                  v-for="entry in currentEnemyDropPreview"
+                  :key="`enemy-drop-${entry}`"
+                  class="info-tooltip-line info-tooltip-muted"
+                >
+                  {{ entry }}
+                </div>
                 <div class="info-tooltip-line info-tooltip-muted">Defeat rewards are scaled by enemy level and type.</div>
               </template>
             </InfoTooltip>
@@ -272,14 +281,22 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
           <InfoTooltip>
             <template #trigger>
               <div class="reward-hint">
-                Rewards: +{{ combatRewards.exp }} XP, +{{ formatCurrency(combatRewards.copper) }},
+                Rewards: +{{ combatRewards.exp }} XP, Drops: {{ currentEnemyDropPreview.join(', ') || 'none' }},
                 +{{ combatRewards.skillExp }} Combat XP / kill
               </div>
             </template>
             <template #content>
               <div class="info-tooltip-title">Current Enemy Rewards</div>
               <div class="info-tooltip-line">Character XP: +{{ combatRewards.exp }}</div>
-              <div class="info-tooltip-line">Currency: +{{ formatCurrency(combatRewards.copper) }}</div>
+              <div class="info-tooltip-line">Guaranteed currency floor: {{ formatCurrency(combatRewards.copper) }}</div>
+              <div class="info-tooltip-line info-tooltip-muted">Drop table entries:</div>
+              <div
+                v-for="entry in currentEnemyDropPreview"
+                :key="`reward-drop-${entry}`"
+                class="info-tooltip-line info-tooltip-muted"
+              >
+                {{ entry }}
+              </div>
               <div class="info-tooltip-line">Combat Skill XP: +{{ combatRewards.skillExp }}</div>
               <div class="info-tooltip-line">Stat XP per stat: +{{ combatRewards.statExp }}</div>
             </template>

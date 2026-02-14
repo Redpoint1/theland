@@ -80,6 +80,13 @@ export interface EnemyType {
   rewardFactor: number
 }
 
+export interface EnemyDropEntry {
+  chance: number
+  amount: number
+  itemId?: string
+  currency?: 'copper'
+}
+
 export type ItemQuality = 'Common' | 'Uncommon' | 'Rare' | 'Epic'
 export type ItemType = 'Equip' | 'Resource' | 'Consumable' | 'Quest'
 

@@ -1,5 +1,6 @@
 import type {
   ActionItem,
+  EnemyDropEntry,
   ItemDef,
   Profession,
   ProfessionAction,
@@ -25,6 +26,248 @@ const professionRanks: [ProfessionRankTier, ...ProfessionRankTier[]] = [
   { name: 'Mythic', minLevel: 175, bonusMultiplier: 0.5 },
   { name: 'Ascendant', minLevel: 200, bonusMultiplier: 0.62 },
 ]
+
+export const enemyDropTables: Record<string, EnemyDropEntry[]> = {
+  wolf: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.35, itemId: 'beast-trophy', amount: 1 },
+  ],
+  bandit: [
+    { chance: 1, currency: 'copper', amount: 1 },
+    { chance: 0.5, currency: 'copper', amount: 2 },
+    { chance: 0.2, itemId: 'scrap-insignia', amount: 1 },
+    { chance: 0.06, itemId: 'minor-elixir', amount: 1 },
+  ],
+  boar: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.5, itemId: 'beast-trophy', amount: 1 },
+  ],
+  goblin: [
+    { chance: 1, currency: 'copper', amount: 1 },
+    { chance: 0.45, currency: 'copper', amount: 2 },
+    { chance: 0.3, itemId: 'goblin-ear', amount: 1 },
+    { chance: 0.08, itemId: 'mist-herb', amount: 2 },
+    { chance: 0.04, itemId: 'minor-elixir', amount: 1 },
+  ],
+  stalker: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.25, itemId: 'beast-trophy', amount: 1 },
+  ],
+  spider: [
+    { chance: 1, itemId: 'venom-trophy', amount: 1 },
+    { chance: 0.35, itemId: 'venom-trophy', amount: 1 },
+    { chance: 0.06, itemId: 'nightshade', amount: 1 },
+  ],
+  croc: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.25, itemId: 'beast-trophy', amount: 1 },
+  ],
+  sprite: [
+    { chance: 1, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.4, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  lurker: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.3, itemId: 'venom-trophy', amount: 1 },
+  ],
+  raider: [
+    { chance: 1, currency: 'copper', amount: 2 },
+    { chance: 0.5, currency: 'copper', amount: 2 },
+    { chance: 0.25, itemId: 'scrap-insignia', amount: 1 },
+    { chance: 0.05, itemId: 'focus-draught', amount: 1 },
+  ],
+  shaman: [
+    { chance: 1, currency: 'copper', amount: 2 },
+    { chance: 0.35, itemId: 'goblin-ear', amount: 1 },
+    { chance: 0.3, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.08, itemId: 'mana-crystal', amount: 1 },
+    { chance: 0.05, itemId: 'focus-draught', amount: 1 },
+  ],
+  brute: [
+    { chance: 1, currency: 'copper', amount: 3 },
+    { chance: 0.5, itemId: 'goblin-ear', amount: 1 },
+    { chance: 0.35, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.03, itemId: 'warding-tonic', amount: 1 },
+  ],
+  bogwraith: [
+    { chance: 1, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.45, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  slime: [
+    { chance: 1, itemId: 'venom-trophy', amount: 1 },
+    { chance: 0.35, itemId: 'venom-trophy', amount: 1 },
+  ],
+  lynx: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.45, itemId: 'beast-trophy', amount: 1 },
+  ],
+  treant: [
+    { chance: 1, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.3, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.09, itemId: 'sungrass', amount: 2 },
+    { chance: 0.04, itemId: 'ghost-orchid', amount: 1 },
+  ],
+  shade: [
+    { chance: 1, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.4, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  ogre: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.45, itemId: 'beast-trophy', amount: 1 },
+  ],
+  bear: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.25, itemId: 'beast-trophy', amount: 1 },
+  ],
+  fey: [
+    { chance: 1, currency: 'copper', amount: 4 },
+    { chance: 0.35, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  stag: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.35, itemId: 'ancient-trophy', amount: 1 },
+  ],
+  warden: [
+    { chance: 1, currency: 'copper', amount: 4 },
+    { chance: 0.4, itemId: 'scrap-insignia', amount: 1 },
+    { chance: 0.05, itemId: 'warding-tonic', amount: 1 },
+  ],
+  ripper: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.3, itemId: 'venom-trophy', amount: 1 },
+  ],
+  hornbeast: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.45, itemId: 'beast-trophy', amount: 1 },
+  ],
+  scavenger: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.2, itemId: 'beast-trophy', amount: 1 },
+  ],
+  drake: [
+    { chance: 1, itemId: 'drake-trophy', amount: 1 },
+    { chance: 0.4, itemId: 'drake-trophy', amount: 1 },
+    { chance: 0.07, itemId: 'drakebloom', amount: 1 },
+  ],
+  cinder: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.3, itemId: 'venom-trophy', amount: 1 },
+  ],
+  pyre: [
+    { chance: 1, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.3, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  sentinel: [
+    { chance: 1, currency: 'copper', amount: 5 },
+    { chance: 0.35, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.12, itemId: 'iron-ore', amount: 2 },
+    { chance: 0.08, itemId: 'silver-ore', amount: 1 },
+    { chance: 0.06, itemId: 'mana-crystal', amount: 1 },
+  ],
+  eel: [
+    { chance: 1, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.25, itemId: 'venom-trophy', amount: 1 },
+  ],
+  charger: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.3, itemId: 'beast-trophy', amount: 1 },
+  ],
+  howler: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.35, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  wyvern: [
+    { chance: 1, itemId: 'drake-trophy', amount: 1 },
+    { chance: 0.5, itemId: 'drake-trophy', amount: 1 },
+  ],
+  harpy: [
+    { chance: 1, currency: 'copper', amount: 4 },
+    { chance: 0.3, itemId: 'scrap-insignia', amount: 1 },
+    { chance: 0.04, itemId: 'clarity-elixir', amount: 1 },
+  ],
+  eagle: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.2, itemId: 'beast-trophy', amount: 1 },
+  ],
+  maw: [
+    { chance: 1, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.5, itemId: 'venom-trophy', amount: 1 },
+    { chance: 0.1, itemId: 'mana-crystal', amount: 1 },
+    { chance: 0.07, itemId: 'mithril-ore', amount: 1 },
+  ],
+  shard: [
+    { chance: 1, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.25, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.14, itemId: 'silver-ore', amount: 2 },
+    { chance: 0.08, itemId: 'mana-crystal', amount: 1 },
+  ],
+  golem: [
+    { chance: 1, itemId: 'ancient-trophy', amount: 2 },
+    { chance: 0.3, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.16, itemId: 'iron-ore', amount: 3 },
+    { chance: 0.11, itemId: 'gold-ore', amount: 1 },
+    { chance: 0.06, itemId: 'mana-crystal', amount: 1 },
+  ],
+  hound: [
+    { chance: 1, itemId: 'beast-trophy', amount: 1 },
+    { chance: 0.35, itemId: 'beast-trophy', amount: 1 },
+  ],
+  basilisk: [
+    { chance: 1, itemId: 'venom-trophy', amount: 2 },
+    { chance: 0.35, itemId: 'venom-trophy', amount: 1 },
+    { chance: 0.07, itemId: 'adamantite-ore', amount: 1 },
+    { chance: 0.05, itemId: 'mana-crystal', amount: 1 },
+  ],
+  guardian: [
+    { chance: 1, itemId: 'ancient-trophy', amount: 2 },
+    { chance: 0.35, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  archon: [
+    { chance: 1, currency: 'copper', amount: 6 },
+    { chance: 0.3, itemId: 'ancient-trophy', amount: 1 },
+    { chance: 0.04, itemId: 'clarity-elixir', amount: 1 },
+  ],
+  tusk: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.35, itemId: 'beast-trophy', amount: 1 },
+  ],
+  yeti: [
+    { chance: 1, itemId: 'beast-trophy', amount: 3 },
+    { chance: 0.3, itemId: 'beast-trophy', amount: 1 },
+  ],
+  wisp: [
+    { chance: 1, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.5, itemId: 'spirit-trophy', amount: 1 },
+  ],
+  wraith: [
+    { chance: 1, itemId: 'spirit-trophy', amount: 2 },
+    { chance: 0.35, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.06, itemId: 'void-thistle', amount: 1 },
+    { chance: 0.06, itemId: 'mana-crystal', amount: 1 },
+  ],
+  saber: [
+    { chance: 1, itemId: 'beast-trophy', amount: 2 },
+    { chance: 0.35, itemId: 'drake-trophy', amount: 1 },
+  ],
+  seer: [
+    { chance: 1, currency: 'copper', amount: 6 },
+    { chance: 0.35, itemId: 'spirit-trophy', amount: 1 },
+    { chance: 0.04, itemId: 'clarity-elixir', amount: 1 },
+    { chance: 0.03, itemId: 'frostguard-draught', amount: 1 },
+  ],
+  scion: [
+    { chance: 1, itemId: 'drake-trophy', amount: 2 },
+    { chance: 0.5, itemId: 'drake-trophy', amount: 1 },
+  ],
+  ancient: [
+    { chance: 1, itemId: 'drake-trophy', amount: 3 },
+    { chance: 0.5, itemId: 'drake-trophy', amount: 1 },
+  ],
+  wyrmling: [
+    { chance: 1, itemId: 'drake-trophy', amount: 1 },
+    { chance: 0.35, itemId: 'drake-trophy', amount: 1 },
+  ],
+}
 
 export const createStats = (): Record<StatKey, Stat> => ({
   Strength: {
@@ -688,6 +931,66 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     subtype: 'Trophy',
     description: 'Proof of a goblin raid defeated.',
     maxStack: 20,
+    priceCopper: 5,
+  },
+  'beast-trophy': {
+    id: 'beast-trophy',
+    name: 'Beast Trophy',
+    quality: 'Common',
+    type: 'Quest',
+    subtype: 'Trophy',
+    description: 'A crude trophy taken from wild beasts.',
+    maxStack: 50,
+    priceCopper: 4,
+  },
+  'venom-trophy': {
+    id: 'venom-trophy',
+    name: 'Venom Trophy',
+    quality: 'Uncommon',
+    type: 'Quest',
+    subtype: 'Trophy',
+    description: 'A volatile gland or sac harvested from toxic creatures.',
+    maxStack: 40,
+    priceCopper: 7,
+  },
+  'spirit-trophy': {
+    id: 'spirit-trophy',
+    name: 'Spirit Trophy',
+    quality: 'Uncommon',
+    type: 'Quest',
+    subtype: 'Trophy',
+    description: 'A condensed trace left by spectral or arcane entities.',
+    maxStack: 35,
+    priceCopper: 9,
+  },
+  'drake-trophy': {
+    id: 'drake-trophy',
+    name: 'Drake Trophy',
+    quality: 'Rare',
+    type: 'Quest',
+    subtype: 'Trophy',
+    description: 'A scale, talon, or fang from draconic predators.',
+    maxStack: 25,
+    priceCopper: 16,
+  },
+  'ancient-trophy': {
+    id: 'ancient-trophy',
+    name: 'Ancient Trophy',
+    quality: 'Rare',
+    type: 'Quest',
+    subtype: 'Trophy',
+    description: 'A fragment reclaimed from ancient guardians and constructs.',
+    maxStack: 25,
+    priceCopper: 14,
+  },
+  'scrap-insignia': {
+    id: 'scrap-insignia',
+    name: 'Scrap Insignia',
+    quality: 'Common',
+    type: 'Quest',
+    subtype: 'Trophy',
+    description: 'A worn token taken from humanoid raiders and scouts.',
+    maxStack: 50,
     priceCopper: 5,
   },
   'iron-ore': {
