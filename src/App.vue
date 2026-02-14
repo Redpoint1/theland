@@ -39,6 +39,7 @@ const activeActionName = computed(() => {
 const totalCopper = computed(
   () => currencyBreakdown.value.gold * 10000 + currencyBreakdown.value.silver * 100 + currencyBreakdown.value.copper,
 )
+const readableCurrency = computed(() => game.formatCopperToCurrency(totalCopper.value))
 
 const hpPercent = computed(() => Math.floor((playerHp.value / Math.max(1, maxHp.value)) * 100))
 const manaPercent = computed(() => Math.floor((mana.value / Math.max(1, maxMana.value)) * 100))
@@ -132,44 +133,17 @@ onBeforeUnmount(() => {
       <InfoTooltip>
         <template #trigger>
           <div class="hud-item">
-            <span class="hud-label">Gold</span>
-            <span class="hud-value">{{ currencyBreakdown.gold }}</span>
+            <span class="hud-label">Currency</span>
+            <span class="hud-value">{{ readableCurrency }}</span>
           </div>
         </template>
         <template #content>
-          <div class="info-tooltip-title">Currency: Gold</div>
+          <div class="info-tooltip-title">Currency</div>
+          <div class="info-tooltip-line">{{ readableCurrency }}</div>
           <div class="info-tooltip-line">Gold: {{ currencyBreakdown.gold }}</div>
-          <div class="info-tooltip-line info-tooltip-muted">1 Gold = 100 Silver = 10,000 Copper.</div>
-          <div class="info-tooltip-line info-tooltip-muted">Total Copper: {{ totalCopper }}</div>
-        </template>
-      </InfoTooltip>
-
-      <InfoTooltip>
-        <template #trigger>
-          <div class="hud-item">
-            <span class="hud-label">Silver</span>
-            <span class="hud-value">{{ currencyBreakdown.silver }}</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="info-tooltip-title">Currency: Silver</div>
           <div class="info-tooltip-line">Silver: {{ currencyBreakdown.silver }}</div>
-          <div class="info-tooltip-line info-tooltip-muted">1 Silver = 100 Copper.</div>
-          <div class="info-tooltip-line info-tooltip-muted">Total Copper: {{ totalCopper }}</div>
-        </template>
-      </InfoTooltip>
-
-      <InfoTooltip>
-        <template #trigger>
-          <div class="hud-item">
-            <span class="hud-label">Copper</span>
-            <span class="hud-value">{{ currencyBreakdown.copper }}</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="info-tooltip-title">Currency: Copper</div>
           <div class="info-tooltip-line">Copper: {{ currencyBreakdown.copper }}</div>
-          <div class="info-tooltip-line info-tooltip-muted">Smallest currency denomination.</div>
+          <div class="info-tooltip-line info-tooltip-muted">1 Gold = 100 Silver = 10,000 Copper.</div>
           <div class="info-tooltip-line info-tooltip-muted">Total Copper: {{ totalCopper }}</div>
         </template>
       </InfoTooltip>

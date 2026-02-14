@@ -19,6 +19,14 @@ export interface CurrencyBreakdown {
   gold: number
 }
 
+export const formatCopperToCurrency = (totalCopper: number) => {
+  const normalized = Math.max(0, Math.floor(totalCopper))
+  const gold = Math.floor(normalized / 10000)
+  const silver = Math.floor((normalized % 10000) / 100)
+  const copper = normalized % 100
+  return `${gold}g ${silver}s ${copper}c`
+}
+
 export interface CharacterState {
   level: number
   exp: number
@@ -161,6 +169,7 @@ export const useProgressionLogic = ({
     professionList,
     skillBonuses,
     currencyBreakdown,
+    formatCopperToCurrency,
     addCurrency,
     spendCurrency,
     addCharacterExp,
