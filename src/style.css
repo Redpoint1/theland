@@ -542,47 +542,6 @@ button:disabled {
   font-size: 0.75rem;
 }
 
-.inventory-tooltip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  min-width: 220px;
-  max-width: 280px;
-  background: rgba(12, 18, 30, 0.95);
-  border: 1px solid rgba(90, 110, 140, 0.4);
-  border-radius: 12px;
-  padding: 0.75rem;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  transform-origin: bottom center;
-}
-
-.inventory-card:hover .inventory-tooltip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-4px);
-}
-
-.tooltip-title {
-  font-weight: 600;
-  color: #e9f2ff;
-  margin-bottom: 0.3rem;
-}
-
-.tooltip-body {
-  font-size: 0.85rem;
-  color: #b8c3de;
-  margin-bottom: 0.4rem;
-}
-
-.tooltip-meta {
-  font-size: 0.75rem;
-  color: #8fa2c6;
-  letter-spacing: 0.04em;
-}
-
 .inventory-empty {
   color: #7f92b6;
   font-size: 0.85rem;
@@ -708,8 +667,11 @@ button:disabled {
 
 .log-message {
   color: #d9e3ff;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+}
+
+.log-focus {
+  color: #c8f0ff;
+  border-bottom: 1px dotted rgba(116, 210, 255, 0.7);
 }
 
 .log-empty {

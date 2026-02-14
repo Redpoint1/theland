@@ -13,6 +13,10 @@ const {
   combatRewards,
   combatLogs,
   currentZone,
+  character,
+  stats,
+  skills,
+  skillBonuses,
   playerHp,
   maxHp,
   mana,
@@ -54,6 +58,111 @@ const zoneEnemySummary = (zoneId: string) => {
   const zone = zones.value.find((entry) => entry.id === zoneId)
   if (!zone) return []
   return zone.enemies.map((enemy) => enemy.name)
+}
+
+const formatPercent = (value: number) => `${Math.round(value * 10000) / 100}%`
+
+interface ParsedCombatLog {
+  before: string
+  focus?: string
+  after: string
+  tooltipTitle?: string
+  tooltipLines?: string[]
+}
+
+const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
+  const message = log.message
+
+  const defeated = message.match(/^Defeated (.+) \(Lv\. (\d+)\)\. Rewards: \+(\d+) XP, \+(\d+)c\.$/)
+  if (defeated) {
+    const [, enemyName, levelText, xpText, copperText] = defeated
+    return {
+      before: 'Defeated ',
+      focus: enemyName,
+      after: ` (Lv. ${levelText}). Rewards: +${xpText} XP, +${copperText}c.`,
+      tooltipTitle: `${enemyName} Defeated`,
+      tooltipLines: [
+        `Enemy level: ${levelText}`,
+        `Character XP reward: +${xpText}`,
+        `Copper reward: +${copperText}c`,
+        'Combat XP and stat XP are also awarded from zone scaling.',
+      ],
+    }
+  }
+
+  const playerHit = message.match(/^You hit (.+) for (\d+) damage\.$/)
+  if (playerHit) {
+    const [, enemyName, damageText] = playerHit
+    const playerPower =
+      character.value.level * 2 +
+      stats.value.Strength.value * 1.4 +
+      stats.value.Agility.value * 1.1 +
+      skills.value.Combat.level * 2 +
+      stats.value.Spirit.value * 0.4
+
+    return {
+      before: `You hit ${enemyName} for `,
+      focus: `${damageText} damage`,
+      after: '.',
+      tooltipTitle: 'Outgoing Damage',
+      tooltipLines: [
+        'Formula: floor((PlayerPower - EnemyPower×0.5 + random[0..6]) × CombatDamageMultiplier)',
+        `Current PlayerPower terms: Lv(${character.value.level}) Str(${stats.value.Strength.value}) Agi(${stats.value.Agility.value}) Combat(${skills.value.Combat.level}) Spirit(${stats.value.Spirit.value})`,
+        `Current PlayerPower estimate: ${Math.floor(playerPower)}`,
+        `Global combat damage bonus: +${formatPercent(skillBonuses.value.combatDamageMultiplier - 1)}`,
+      ],
+    }
+  }
+
+  const enemyHit = message.match(/^(.+) hits you for (\d+) damage \(received\)\.$/)
+  if (enemyHit) {
+    const [, enemyName, damageText] = enemyHit
+    const mitigation = stats.value.Vitality.value * 0.8 + stats.value.Agility.value * 0.4
+    return {
+      before: `${enemyName} hits you for `,
+      focus: `${damageText} damage`,
+      after: ' (received).',
+      tooltipTitle: 'Incoming Damage',
+      tooltipLines: [
+        'Formula: floor((EnemyPower - Mitigation + random[0..4]) × (1 - DamageReduction))',
+        `Current mitigation: ${Math.floor(mitigation)} (Vitality ${stats.value.Vitality.value}, Agility ${stats.value.Agility.value})`,
+        `Global damage reduction: +${formatPercent(skillBonuses.value.combatDamageReduction)}`,
+      ],
+    }
+  }
+
+  const encountered = message.match(/^Encountered (.+) \(Lv\. (\d+)\) in (.+)\.$/)
+  if (encountered) {
+    const [, enemyName, levelText, zoneName] = encountered
+    return {
+      before: 'Encountered ',
+      focus: enemyName,
+      after: ` (Lv. ${levelText}) in ${zoneName}.`,
+      tooltipTitle: 'Encounter Target',
+      tooltipLines: [`Enemy level: ${levelText}`, `Zone: ${zoneName}`],
+    }
+  }
+
+  const arcaneBurst = message.match(/^Arcane Burst hits (.+) for (\d+) damage\.$/)
+  if (arcaneBurst) {
+    const [, enemyName, damageText] = arcaneBurst
+    return {
+      before: `Arcane Burst hits ${enemyName} for `,
+      focus: `${damageText} damage`,
+      after: '.',
+      tooltipTitle: 'Arcane Burst Damage',
+      tooltipLines: [
+        'Formula: max(6, floor(Intelligence×1.6 + Arcana×3))',
+        `Current Intelligence: ${stats.value.Intelligence.value}`,
+        `Current Arcana: ${skills.value.Arcana.level}`,
+      ],
+    }
+  }
+
+  return {
+    before: message,
+    after: '',
+  }
 }
 </script>
 
@@ -182,6 +291,34 @@ const zoneEnemySummary = (zoneId: string) => {
         :entries="filteredLogs"
         :on-clear="game.clearCombatLogs"
       >
+        <template #row="{ log }">
+          <span class="log-time">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
+          <span class="log-type">{{ log.type }}</span>
+          <div class="log-message">
+            <template v-if="parseCombatLog(log).focus && parseCombatLog(log).tooltipLines">
+              {{ parseCombatLog(log).before }}
+              <InfoTooltip max-width="560px" placement="bottom" align="left" teleport>
+                <template #trigger>
+                  <span class="log-focus">{{ parseCombatLog(log).focus }}</span>
+                </template>
+                <template #content>
+                  <div class="info-tooltip-title">{{ parseCombatLog(log).tooltipTitle }}</div>
+                  <div
+                    v-for="line in parseCombatLog(log).tooltipLines"
+                    :key="line"
+                    class="info-tooltip-line"
+                  >
+                    {{ line }}
+                  </div>
+                </template>
+              </InfoTooltip>
+              {{ parseCombatLog(log).after }}
+            </template>
+            <template v-else>
+              {{ log.message }}
+            </template>
+          </div>
+        </template>
         <template #filters>
           <div class="log-filters">
             <label v-for="option in filterOptions" :key="option.id" class="filter-pill">

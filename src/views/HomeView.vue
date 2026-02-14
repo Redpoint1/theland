@@ -8,6 +8,7 @@ import SkillCard from '../components/SkillCard.vue'
 import SkillBonusItem from '../components/SkillBonusItem.vue'
 import IdleActionCard from '../components/IdleActionCard.vue'
 import LogPanel from '../components/LogPanel.vue'
+import InfoTooltip from '../components/InfoTooltip.vue'
 
 const game = useGameStore()
 const {
@@ -66,6 +67,84 @@ const isIdleActionActive = (actionId: string) =>
   activeTask.value.type === 'idle' && activeTask.value.actionId === actionId
 
 const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
+
+interface ParsedActionLog {
+  before: string
+  focus?: string
+  after: string
+  tooltipTitle?: string
+  tooltipLines?: string[]
+}
+
+const parseActionLog = (log: { message: string; type: string }): ParsedActionLog => {
+  const message = log.message
+
+  const started = message.match(/^Started (.+)\.$/)
+  if (started) {
+    const [, actionName] = started
+    return {
+      before: 'Started ',
+      focus: actionName,
+      after: '.',
+      tooltipTitle: 'Action Started',
+      tooltipLines: ['This action is now your active idle task.', 'Progress runs every tick while not in combat.'],
+    }
+  }
+
+  const stopped = message.match(/^Stopped (.+)\.$/)
+  if (stopped) {
+    const [, actionName] = stopped
+    return {
+      before: 'Stopped ',
+      focus: actionName,
+      after: '.',
+      tooltipTitle: 'Action Stopped',
+      tooltipLines: ['This action is no longer active.', 'No further rewards are generated until restarted.'],
+    }
+  }
+
+  const noMana = message.match(/^Not enough mana to complete (.+)\.$/)
+  if (noMana) {
+    const [, actionName] = noMana
+    return {
+      before: 'Not enough mana to complete ',
+      focus: actionName,
+      after: '.',
+      tooltipTitle: 'Mana Requirement',
+      tooltipLines: ['Action halted due to insufficient mana.', 'Increase Intelligence or use mana consumables to sustain it.'],
+    }
+  }
+
+  const completed = message.match(/^Completed (.+)\. (.+)\.$/)
+  if (completed) {
+    const [, actionName, rewards] = completed
+    return {
+      before: 'Completed ',
+      focus: actionName,
+      after: `. ${rewards}.`,
+      tooltipTitle: 'Action Completion',
+      tooltipLines: ['Action cycle finished.', `Rewards granted: ${rewards}`],
+    }
+  }
+
+  const used = message.match(/^Used (.+)\. (.+)\.$/)
+  if (used) {
+    const [, itemName, effects] = used
+    const effectText = effects ?? 'No additional effect details.'
+    return {
+      before: 'Used ',
+      focus: itemName,
+      after: `. ${effectText}.`,
+      tooltipTitle: 'Consumable Used',
+      tooltipLines: [effectText, 'Effect applies immediately and item is consumed.'],
+    }
+  }
+
+  return {
+    before: message,
+    after: '',
+  }
+}
 
 </script>
 
@@ -195,7 +274,36 @@ const actionLogEntries = computed(() => actionLogs.value.slice().reverse())
         subtitle="Latest 500 events retained."
         :entries="actionLogEntries"
         :on-clear="game.clearActionLogs"
-      />
+      >
+        <template #row="{ log }">
+          <span class="log-time">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
+          <span class="log-type">{{ log.type }}</span>
+          <div class="log-message">
+            <template v-if="parseActionLog(log).focus && parseActionLog(log).tooltipLines">
+              {{ parseActionLog(log).before }}
+              <InfoTooltip max-width="520px" placement="bottom" align="left" teleport>
+                <template #trigger>
+                  <span class="log-focus">{{ parseActionLog(log).focus }}</span>
+                </template>
+                <template #content>
+                  <div class="info-tooltip-title">{{ parseActionLog(log).tooltipTitle }}</div>
+                  <div
+                    v-for="line in parseActionLog(log).tooltipLines"
+                    :key="line"
+                    class="info-tooltip-line"
+                  >
+                    {{ line }}
+                  </div>
+                </template>
+              </InfoTooltip>
+              {{ parseActionLog(log).after }}
+            </template>
+            <template v-else>
+              {{ log.message }}
+            </template>
+          </div>
+        </template>
+      </LogPanel>
 
     </section>
   </main>

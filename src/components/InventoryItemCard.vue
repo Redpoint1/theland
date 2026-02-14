@@ -27,7 +27,7 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
     <div v-if="itemDef" class="inventory-item">
       <div class="inventory-header">
         <div>
-          <InfoTooltip>
+          <InfoTooltip teleport max-width="520px" placement="bottom" align="left">
             <template #trigger>
               <div class="item-title">{{ itemDef.name }}</div>
             </template>
