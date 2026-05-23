@@ -18,6 +18,11 @@ export const useLogbook = () => {
   const actionLogs = ref<ActionLogEntry[]>([])
   let actionLogId = 0
 
+  const cloneEntries = <T extends { id: number }>(entries: T[]) => entries.map((entry) => ({ ...entry }))
+
+  const getMaxId = <T extends { id: number }>(entries: T[]) =>
+    entries.reduce((maxId, entry) => Math.max(maxId, entry.id), 0)
+
   const addCombatLog = (type: CombatLogType, message: string) => {
     combatLogs.value.push({
       id: (combatLogId += 1),
@@ -59,14 +64,32 @@ export const useLogbook = () => {
 
   const clearCombatLogs = () => {
     combatLogs.value = []
+    combatLogId = 0
   }
 
   const clearProfessionLogs = () => {
     professionLogs.value = []
+    professionLogId = 0
   }
 
   const clearActionLogs = () => {
     actionLogs.value = []
+    actionLogId = 0
+  }
+
+  const restoreCombatLogs = (entries: CombatLogEntry[]) => {
+    combatLogs.value = cloneEntries(entries)
+    combatLogId = getMaxId(combatLogs.value)
+  }
+
+  const restoreProfessionLogs = (entries: ProfessionLogEntry[]) => {
+    professionLogs.value = cloneEntries(entries)
+    professionLogId = getMaxId(professionLogs.value)
+  }
+
+  const restoreActionLogs = (entries: ActionLogEntry[]) => {
+    actionLogs.value = cloneEntries(entries)
+    actionLogId = getMaxId(actionLogs.value)
   }
 
   return {
@@ -79,5 +102,8 @@ export const useLogbook = () => {
     clearCombatLogs,
     clearProfessionLogs,
     clearActionLogs,
+    restoreCombatLogs,
+    restoreProfessionLogs,
+    restoreActionLogs,
   }
 }

@@ -5,6 +5,7 @@ import InventoryView from './views/InventoryView.vue'
 import ProfessionsView from './views/ProfessionsView.vue'
 import MistVillageView from './views/MistVillageView.vue'
 import BonusesView from './views/BonusesView.vue'
+import SettingsView from './views/SettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -38,6 +39,11 @@ const router = createRouter({
       path: '/bonuses',
       name: 'bonuses',
       component: BonusesView,
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
     },
   ],
 })

@@ -99,6 +99,7 @@ onBeforeUnmount(() => {
         <RouterLink to="/inventory" class="nav-link">Inventory</RouterLink>
         <RouterLink to="/professions" class="nav-link">Professions</RouterLink>
         <RouterLink to="/bonuses" class="nav-link">Bonuses</RouterLink>
+        <RouterLink to="/settings" class="nav-link">Settings</RouterLink>
       </div>
     </nav>
     <section class="hud">

@@ -17,7 +17,6 @@ export interface TickerDeps {
   runCombatTick: () => void
   runIdleActions: () => void
   runProfessionActions: () => void
-  spawnEnemy: () => void
 }
 
 export const useTicker = ({
@@ -35,7 +34,6 @@ export const useTicker = ({
   runCombatTick,
   runIdleActions,
   runProfessionActions,
-  spawnEnemy,
 }: TickerDeps) => {
   const runTick = () => {
     if (paused.value) return
@@ -76,7 +74,6 @@ export const useTicker = ({
 
   const startTicker = () => {
     if (timer) return
-    spawnEnemy()
     timer = window.setInterval(runTick, tickMs)
   }
 

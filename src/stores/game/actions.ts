@@ -59,6 +59,9 @@ export const useActionLogic = ({
   const idleActionJustCompleted = ref(false)
   const professionActionJustCompleted = ref(false)
 
+  const normalizeProgress = (value: number) =>
+    Math.max(0, Math.min(actionDurationMs, Math.floor(value)))
+
   const isIdleActionActive = computed(() => activeTask.value.type === 'idle')
   const isProfessionActionActive = computed(() => activeTask.value.type === 'profession')
 
@@ -351,5 +354,17 @@ export const useActionLogic = ({
     runProfessionActions,
     deactivateActions,
     deactivateProfessionActions,
+    restoreActionProgress: (idleProgress: number, professionProgress: number) => {
+      idleActionProgress.value = normalizeProgress(idleProgress)
+      professionActionProgress.value = normalizeProgress(professionProgress)
+      idleActionJustCompleted.value = false
+      professionActionJustCompleted.value = false
+    },
+    resetActionProgress: () => {
+      idleActionProgress.value = 0
+      professionActionProgress.value = 0
+      idleActionJustCompleted.value = false
+      professionActionJustCompleted.value = false
+    },
   }
 }

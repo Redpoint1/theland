@@ -61,7 +61,7 @@ export interface CombatLogicDeps {
   deactivateProfessionActions: () => void
 }
 
-interface ActiveBuff {
+export interface ActiveBuff {
   id: string
   name: string
   remainingTicks: number
@@ -474,5 +474,11 @@ export const useCombatLogic = ({
     learnSpell,
     setSelectedSpell,
     castSelectedSpell,
+    restoreActiveBuffs: (buffs: ActiveBuff[]) => {
+      activeBuffs.value = buffs.map((buff) => ({ ...buff }))
+    },
+    clearActiveBuffs: () => {
+      activeBuffs.value = []
+    },
   }
 }

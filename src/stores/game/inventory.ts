@@ -22,6 +22,10 @@ export const useInventoryLogic = ({
 }: InventoryDeps) => {
   let inventorySlotId = 0
 
+  const rebaseInventorySlotId = (slots: InventorySlot[] = inventory) => {
+    inventorySlotId = slots.reduce((maxId, slot) => Math.max(maxId, slot.id), 0)
+  }
+
   const getItemDef = (itemId: string) => itemDefs[itemId]
 
   const createSlot = (itemId?: string, quantity = 0): InventorySlot => ({
@@ -173,5 +177,6 @@ export const useInventoryLogic = ({
     sellFromSlot,
     consumeFromSlot,
     getItemDef,
+    rebaseInventorySlotId,
   }
 }
