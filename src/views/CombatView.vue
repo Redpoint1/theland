@@ -289,41 +289,6 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
           </div>
         </div>
 
-        <div class="zone-grid">
-          <button
-            v-for="zone in zones"
-            :key="zone.id"
-            class="zone-card"
-            :class="{ selected: zone.id === combat.zoneId }"
-            @click="game.setZone(zone.id)"
-          >
-            <InfoTooltip>
-              <template #trigger>
-                <div class="item-title">{{ zone.name }}</div>
-              </template>
-              <template #content>
-                <div class="info-tooltip-title">{{ zone.name }}</div>
-                <div class="info-tooltip-line">{{ zone.description }}</div>
-                <div class="info-tooltip-line">Level Range: {{ zone.levelMin }}-{{ zone.levelMax }}</div>
-                <div class="info-tooltip-line">Base Power: {{ zone.basePower }}</div>
-                <div class="info-tooltip-line">Base Reward XP: {{ zone.baseRewards.exp }}</div>
-                <div class="info-tooltip-line">Drop Table: Enemy-specific (chance based)</div>
-                <div class="info-tooltip-line">Base Combat XP: {{ zone.baseRewards.skillExp }}</div>
-                <div class="info-tooltip-line info-tooltip-muted">Enemies:</div>
-                <div
-                  v-for="enemyName in zoneEnemySummary(zone.id)"
-                  :key="`${zone.id}-${enemyName}`"
-                  class="info-tooltip-line info-tooltip-muted"
-                >
-                  {{ enemyName }}
-                </div>
-              </template>
-            </InfoTooltip>
-            <div class="item-desc">{{ zone.description }}</div>
-            <div class="zone-level">Lv. {{ zone.levelMin }}-{{ zone.levelMax }}</div>
-          </button>
-        </div>
-
         <div class="enemy-card">
           <div class="npc-column">
             <div>
@@ -384,6 +349,41 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
             </InfoTooltip>
           </div>
 
+        </div>
+
+        <div class="zone-grid">
+          <button
+            v-for="zone in zones"
+            :key="zone.id"
+            class="zone-card"
+            :class="{ selected: zone.id === combat.zoneId }"
+            @click="game.setZone(zone.id)"
+          >
+            <InfoTooltip>
+              <template #trigger>
+                <div class="item-title">{{ zone.name }}</div>
+              </template>
+              <template #content>
+                <div class="info-tooltip-title">{{ zone.name }}</div>
+                <div class="info-tooltip-line">{{ zone.description }}</div>
+                <div class="info-tooltip-line">Level Range: {{ zone.levelMin }}-{{ zone.levelMax }}</div>
+                <div class="info-tooltip-line">Base Power: {{ zone.basePower }}</div>
+                <div class="info-tooltip-line">Base Reward XP: {{ zone.baseRewards.exp }}</div>
+                <div class="info-tooltip-line">Drop Table: Enemy-specific (chance based)</div>
+                <div class="info-tooltip-line">Base Combat XP: {{ zone.baseRewards.skillExp }}</div>
+                <div class="info-tooltip-line info-tooltip-muted">Enemies:</div>
+                <div
+                  v-for="enemyName in zoneEnemySummary(zone.id)"
+                  :key="`${zone.id}-${enemyName}`"
+                  class="info-tooltip-line info-tooltip-muted"
+                >
+                  {{ enemyName }}
+                </div>
+              </template>
+            </InfoTooltip>
+            <div class="item-desc">{{ zone.description }}</div>
+            <div class="zone-level">Lv. {{ zone.levelMin }}-{{ zone.levelMax }}</div>
+          </button>
         </div>
       </div>
 
