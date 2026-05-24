@@ -214,43 +214,46 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .shell {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 1.25rem 1.25rem 2.5rem;
 }
 
 .top-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-  border-radius: 18px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 16px;
   background: rgba(14, 20, 33, 0.9);
   border: 1px solid rgba(80, 98, 130, 0.25);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
 }
 
 .brand {
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #c7d4f2;
 }
 
 .nav-links {
   display: flex;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .nav-link {
   text-decoration: none;
   color: #c7d4f2;
-  padding: 0.45rem 1rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
   border: 1px solid transparent;
   font-weight: 600;
+  font-size: 0.92rem;
   transition: all 0.2s ease;
 }
 
@@ -268,34 +271,34 @@ onBeforeUnmount(() => {
 .hud {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  padding: 0.9rem 1.25rem;
-  margin-bottom: 1.5rem;
-  border-radius: 16px;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 14px;
   background: rgba(10, 16, 28, 0.9);
   border: 1px solid rgba(80, 98, 130, 0.25);
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
 }
 
 .hud-item {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
   align-items: baseline;
-  padding: 0.35rem 0.65rem;
+  padding: 0.25rem 0.55rem;
   border-radius: 999px;
   background: rgba(24, 34, 52, 0.8);
   border: 1px solid rgba(90, 110, 140, 0.3);
 }
 
 .hud-item.wide {
-  min-width: 220px;
+  min-width: 180px;
   justify-content: space-between;
 }
 
 .hud-label {
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: #8fa2c6;
 }
 
@@ -304,7 +307,31 @@ onBeforeUnmount(() => {
   color: #e9f2ff;
 }
 
+@media (max-width: 1024px) {
+  .shell {
+    padding: 1rem 1rem 2rem;
+  }
+
+  .top-nav {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .nav-links {
+    justify-content: flex-start;
+  }
+
+  .hud-item.wide {
+    min-width: 160px;
+    flex: 1 1 160px;
+  }
+}
+
 @media (max-width: 720px) {
+  .shell {
+    padding: 0.85rem 0.85rem 1.5rem;
+  }
+
   .top-nav {
     flex-direction: column;
     align-items: flex-start;

@@ -94,7 +94,7 @@ const derivedLines = computed(() => {
 .list-item {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
 }
 
@@ -103,28 +103,28 @@ const derivedLines = computed(() => {
 }
 
 .item-desc {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #8fa2c6;
 }
 
 .item-value {
   text-align: right;
-  min-width: 120px;
+  min-width: 108px;
 }
 
 .value {
-  font-size: 1.6rem;
+  font-size: 1.35rem;
   font-weight: 600;
 }
 
 .item-hint {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #7d90b8;
 }
 
 .stat-controls {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.3rem;
   justify-content: flex-end;
 }
 
@@ -133,8 +133,8 @@ const derivedLines = computed(() => {
   color: #f0c566;
   border: 1px solid rgba(240, 197, 102, 0.5);
   border-radius: 10px;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.7rem;
+  padding: 0.16rem 0.45rem;
+  font-size: 0.66rem;
   font-weight: 600;
   cursor: pointer;
 }

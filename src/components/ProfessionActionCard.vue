@@ -97,10 +97,10 @@ const rewardSummary = computed(() =>
 .profession-action {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.85rem;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 14px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
   background: rgba(21, 30, 47, 0.75);
   border: 1px solid rgba(90, 110, 140, 0.3);
 }
@@ -114,24 +114,24 @@ const rewardSummary = computed(() =>
 }
 
 .item-desc {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #8fa2c6;
 }
 
 .item-hint {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #7d90b8;
 }
 
 .reward-chip {
   display: inline-flex;
   align-items: center;
-  margin-left: 0.35rem;
-  padding: 0.15rem 0.5rem;
+  margin-left: 0.3rem;
+  padding: 0.12rem 0.4rem;
   border-radius: 999px;
   background: rgba(24, 34, 52, 0.8);
   border: 1px solid rgba(90, 110, 140, 0.3);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #c7d4f2;
   white-space: nowrap;
 }
@@ -144,15 +144,16 @@ const rewardSummary = computed(() =>
 
 .profession-action :deep(.progress) {
   width: 100%;
-  margin-top: 0.4rem;
+  margin-top: 0.3rem;
 }
 
 .toggle {
   background: rgba(69, 85, 110, 0.4);
   color: #e6e9f2;
   border: 1px solid rgba(121, 145, 180, 0.4);
-  padding: 0.4rem 1.1rem;
-  border-radius: 12px;
+  padding: 0.32rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
 }

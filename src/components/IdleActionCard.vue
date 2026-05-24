@@ -85,9 +85,9 @@ const describeEntries = (entries?: Record<string, number>) =>
 .action-card {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 16px;
+  gap: 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
   background: rgba(21, 30, 47, 0.8);
   border: 1px solid rgba(90, 110, 140, 0.3);
 }
@@ -97,7 +97,7 @@ const describeEntries = (entries?: Record<string, number>) =>
 }
 
 .item-desc {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #8fa2c6;
 }
 
@@ -105,16 +105,17 @@ const describeEntries = (entries?: Record<string, number>) =>
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .toggle {
   background: rgba(69, 85, 110, 0.4);
   color: #e6e9f2;
   border: 1px solid rgba(121, 145, 180, 0.4);
-  padding: 0.4rem 1.1rem;
-  border-radius: 12px;
+  padding: 0.32rem 0.9rem;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
@@ -129,7 +130,7 @@ const describeEntries = (entries?: Record<string, number>) =>
 }
 
 .action-hint {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #8fa2c6;
 }
 

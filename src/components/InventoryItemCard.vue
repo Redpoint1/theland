@@ -70,11 +70,11 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
 
 <style scoped>
 .inventory-card {
-  padding: 0.75rem;
-  border-radius: 14px;
+  padding: 0.65rem;
+  border-radius: 12px;
   background: rgba(21, 30, 47, 0.7);
   border: 1px solid rgba(90, 110, 140, 0.3);
-  min-height: 160px;
+  min-height: 140px;
   position: relative;
   overflow: hidden;
 }
@@ -82,13 +82,13 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
 .inventory-item {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .inventory-header {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: flex-start;
 }
 
@@ -97,15 +97,15 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
 }
 
 .item-desc {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #8fa2c6;
 }
 
 .inventory-meta {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: #b8c3de;
 }
 
@@ -127,16 +127,16 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
 .inventory-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .toggle {
   background: rgba(69, 85, 110, 0.4);
   color: #e6e9f2;
   border: 1px solid rgba(121, 145, 180, 0.4);
-  padding: 0.35rem 0.7rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -148,8 +148,8 @@ const canUse = computed(() => canSell.value && itemDef.value?.type === 'Consumab
 
 .inventory-empty {
   color: #7f92b6;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-align: center;
-  padding-top: 2rem;
+  padding-top: 1.4rem;
 }
 </style>
