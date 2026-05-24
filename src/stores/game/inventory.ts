@@ -46,6 +46,32 @@ export const useInventoryLogic = ({
   const getItemQuantity = (itemId: string) =>
     inventory.reduce((total, slot) => (slot.itemId === itemId ? total + slot.quantity : total), 0)
 
+  const restoreInventory = (slots: InventorySlot[]) => {
+    const totals = new Map<string, number>()
+
+    slots.forEach((slot) => {
+      if (!slot.itemId) return
+      const quantity = Math.max(0, Math.floor(slot.quantity))
+      if (quantity <= 0) return
+      totals.set(slot.itemId, (totals.get(slot.itemId) ?? 0) + quantity)
+    })
+
+    inventory.splice(0, inventory.length)
+    inventorySlotId = 0
+
+    totals.forEach((quantity, itemId) => {
+      const def = getItemDef(itemId)
+      if (!def) return
+
+      let remaining = quantity
+      while (remaining > 0) {
+        const stackQuantity = Math.min(def.maxStack, remaining)
+        inventory.push(createSlot(itemId, stackQuantity))
+        remaining -= stackQuantity
+      }
+    })
+  }
+
   const removeItem = (itemId: string, amount: number) => {
     let remaining = amount
     for (let i = inventory.length - 1; i >= 0; i -= 1) {
@@ -177,6 +203,7 @@ export const useInventoryLogic = ({
     sellFromSlot,
     consumeFromSlot,
     getItemDef,
+    restoreInventory,
     rebaseInventorySlotId,
   }
 }

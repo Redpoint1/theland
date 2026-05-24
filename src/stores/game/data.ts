@@ -1018,6 +1018,8 @@ export const createSpellDefinitions = (): SpellDefinition[] => [
   },
 ]
 
+const questItemMaxStack = 200
+
 export const createItemDefs = (): Record<string, ItemDef> => ({
   'copper-ore': {
     id: 'copper-ore',
@@ -1126,7 +1128,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Quest',
     subtype: 'Trophy',
     description: 'Proof of a goblin raid defeated.',
-    maxStack: 20,
+    maxStack: questItemMaxStack,
     priceCopper: 5,
   },
   'beast-trophy': {
@@ -1136,7 +1138,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Quest',
     subtype: 'Trophy',
     description: 'A crude trophy taken from wild beasts.',
-    maxStack: 50,
+    maxStack: questItemMaxStack,
     priceCopper: 4,
   },
   'venom-trophy': {
@@ -1146,7 +1148,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Quest',
     subtype: 'Trophy',
     description: 'A volatile gland or sac harvested from toxic creatures.',
-    maxStack: 40,
+    maxStack: questItemMaxStack,
     priceCopper: 7,
   },
   'spirit-trophy': {
@@ -1156,7 +1158,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Quest',
     subtype: 'Trophy',
     description: 'A condensed trace left by spectral or arcane entities.',
-    maxStack: 35,
+    maxStack: questItemMaxStack,
     priceCopper: 9,
   },
   'drake-trophy': {
@@ -1166,7 +1168,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Quest',
     subtype: 'Trophy',
     description: 'A scale, talon, or fang from draconic predators.',
-    maxStack: 25,
+    maxStack: questItemMaxStack,
     priceCopper: 16,
   },
   'ancient-trophy': {
@@ -1176,7 +1178,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Quest',
     subtype: 'Trophy',
     description: 'A fragment reclaimed from ancient guardians and constructs.',
-    maxStack: 25,
+    maxStack: questItemMaxStack,
     priceCopper: 14,
   },
   'scrap-insignia': {
@@ -1186,7 +1188,7 @@ export const createItemDefs = (): Record<string, ItemDef> => ({
     type: 'Quest',
     subtype: 'Trophy',
     description: 'A worn token taken from humanoid raiders and scouts.',
-    maxStack: 50,
+    maxStack: questItemMaxStack,
     priceCopper: 5,
   },
   'iron-ore': {

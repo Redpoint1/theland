@@ -876,7 +876,7 @@ export const useGameStore = defineStore('game', () => {
     sellFromSlot,
     consumeFromSlot,
     getItemDef,
-    rebaseInventorySlotId,
+    restoreInventory,
   } = useInventoryLogic({
     itemDefs,
     inventory,
@@ -1095,8 +1095,7 @@ export const useGameStore = defineStore('game', () => {
     applySkillProgress(state.skills)
     applyProfessionProgress(state.professions)
     activeTask.value = cloneActiveTask(state.activeTask)
-    inventory.splice(0, inventory.length, ...cloneEntries(state.inventory))
-    rebaseInventorySlotId()
+    restoreInventory(state.inventory)
     applySpellbookState(state.spellbook)
     selectedSpellId.value = state.selectedSpellId
     Object.assign(combat, state.combat)
