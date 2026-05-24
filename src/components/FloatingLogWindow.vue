@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useGameStore, type ActionLogEntry, type CombatLogEntry, type ProfessionLogEntry } from '../stores/game'
 import InfoTooltip from './InfoTooltip.vue'
@@ -8,17 +8,8 @@ import InfoTooltip from './InfoTooltip.vue'
 type LogTab = 'combat' | 'action' | 'profession'
 type BasicLogEntry = CombatLogEntry | ActionLogEntry | ProfessionLogEntry
 
-interface WindowBounds {
-  width: number
-  height: number
-  left: number
-  top: number
-}
-
-interface PersistedWindowState {
-  minimized: boolean
+interface PersistedPanelState {
   activeTab: LogTab
-  bounds: WindowBounds
   filters: Record<LogTab, Record<string, boolean>>
   lastSeen: Record<LogTab, number>
 }
@@ -31,13 +22,26 @@ interface ParsedLogEntry {
   tooltipLines?: string[]
 }
 
-const props = defineProps<{
-  combatLogs: CombatLogEntry[]
-  actionLogs: ActionLogEntry[]
-  professionLogs: ProfessionLogEntry[]
-  onClearCombat?: () => void
-  onClearAction?: () => void
-  onClearProfession?: () => void
+const props = withDefaults(
+  defineProps<{
+    combatLogs: CombatLogEntry[]
+    actionLogs: ActionLogEntry[]
+    professionLogs: ProfessionLogEntry[]
+    onClearCombat?: () => void
+    onClearAction?: () => void
+    onClearProfession?: () => void
+    isOpen?: boolean
+    isMobile?: boolean
+  }>(),
+  {
+    isOpen: false,
+    isMobile: false,
+  },
+)
+
+const emit = defineEmits<{
+  (event: 'toggle'): void
+  (event: 'close'): void
 }>()
 
 const route = useRoute()
@@ -45,11 +49,6 @@ const game = useGameStore()
 const { character, stats, skills, skillBonuses } = storeToRefs(game)
 
 const storageKey = 'theland:log-window-state'
-const outerGap = 16
-const narrowBreakpoint = 720
-const defaultWidth = 420
-const defaultHeight = 360
-const minimizedBarHeight = 56
 
 const tabs = ['combat', 'action', 'profession'] as const satisfies readonly LogTab[]
 
@@ -383,45 +382,6 @@ const parseLogEntry = (tab: LogTab, entry: BasicLogEntry): ParsedLogEntry => {
   return parseProfessionLog(entry as ProfessionLogEntry)
 }
 
-const viewportWidth = ref(typeof window === 'undefined' ? 1280 : window.innerWidth)
-const viewportHeight = ref(typeof window === 'undefined' ? 720 : window.innerHeight)
-const isNarrowViewport = ref(viewportWidth.value <= narrowBreakpoint)
-
-const bounds = reactive<WindowBounds>({
-  width: defaultWidth,
-  height: defaultHeight,
-  left: outerGap,
-  top: outerGap,
-})
-
-const state = reactive<PersistedWindowState>({
-  minimized: false,
-  activeTab: 'combat',
-  bounds: { ...bounds },
-  filters: createDefaultFilters(),
-  lastSeen: {
-    combat: 0,
-    action: 0,
-    profession: 0,
-  },
-})
-
-const dragState = reactive({
-  active: false,
-  pointerX: 0,
-  pointerY: 0,
-  left: 0,
-  top: 0,
-})
-
-const resizeState = reactive({
-  active: false,
-  pointerX: 0,
-  pointerY: 0,
-  width: 0,
-  height: 0,
-})
-
 function createDefaultFilters(): Record<LogTab, Record<string, boolean>> {
   return {
     combat: {
@@ -452,54 +412,17 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isLogTab = (value: unknown): value is LogTab =>
   typeof value === 'string' && tabs.includes(value as LogTab)
 
-const clamp = (value: number, minimum: number, maximum: number) =>
-  Math.min(Math.max(value, minimum), maximum)
+const state = reactive<PersistedPanelState>({
+  activeTab: 'combat',
+  filters: createDefaultFilters(),
+  lastSeen: {
+    combat: 0,
+    action: 0,
+    profession: 0,
+  },
+})
 
-const getWidthBounds = () => {
-  const maxWidth = Math.max(260, viewportWidth.value - outerGap * 2)
-  const minWidth = Math.min(320, maxWidth)
-  return { minWidth, maxWidth }
-}
-
-const getHeightBounds = () => {
-  const maxHeight = Math.max(200, viewportHeight.value - outerGap * 2)
-  const minHeight = Math.min(220, maxHeight)
-  return { minHeight, maxHeight }
-}
-
-const clampBounds = (value: Partial<WindowBounds>): WindowBounds => {
-  const { minWidth, maxWidth } = getWidthBounds()
-  const { minHeight, maxHeight } = getHeightBounds()
-  const width = clamp(Math.round(value.width ?? bounds.width ?? defaultWidth), minWidth, maxWidth)
-  const height = clamp(Math.round(value.height ?? bounds.height ?? defaultHeight), minHeight, maxHeight)
-  const visualHeight = state.minimized ? minimizedBarHeight : height
-  const left = clamp(
-    Math.round(value.left ?? bounds.left ?? outerGap),
-    outerGap,
-    Math.max(outerGap, viewportWidth.value - width - outerGap),
-  )
-  const top = clamp(
-    Math.round(value.top ?? bounds.top ?? outerGap),
-    outerGap,
-    Math.max(outerGap, viewportHeight.value - visualHeight - outerGap),
-  )
-  return { width, height, left, top }
-}
-
-const getDefaultBounds = (): WindowBounds => {
-  const { maxWidth } = getWidthBounds()
-  const { maxHeight } = getHeightBounds()
-  const width = Math.min(defaultWidth, maxWidth)
-  const height = Math.min(defaultHeight, maxHeight)
-  return clampBounds({
-    width,
-    height,
-    left: viewportWidth.value - width - outerGap,
-    top: viewportHeight.value - height - outerGap,
-  })
-}
-
-const readPersistedState = (): PersistedWindowState | null => {
+const readPersistedState = (): PersistedPanelState | null => {
   if (!hasStorage()) return null
 
   try {
@@ -507,32 +430,16 @@ const readPersistedState = (): PersistedWindowState | null => {
     if (!raw) return null
 
     const parsed = JSON.parse(raw)
-    if (!isRecord(parsed) || !isLogTab(parsed.activeTab) || typeof parsed.minimized !== 'boolean') {
-      return null
-    }
+    if (!isRecord(parsed)) return null
 
-    const nextState: PersistedWindowState = {
-      minimized: parsed.minimized,
-      activeTab: parsed.activeTab,
-      bounds: getDefaultBounds(),
+    const nextState: PersistedPanelState = {
+      activeTab: isLogTab(parsed.activeTab) ? parsed.activeTab : 'combat',
       filters: createDefaultFilters(),
       lastSeen: {
         combat: 0,
         action: 0,
         profession: 0,
       },
-    }
-
-    if (isRecord(parsed.bounds)) {
-      const { width, height, left, top } = parsed.bounds
-      if (
-        typeof width === 'number' &&
-        typeof height === 'number' &&
-        typeof left === 'number' &&
-        typeof top === 'number'
-      ) {
-        nextState.bounds = clampBounds({ width, height, left, top })
-      }
     }
 
     if (isRecord(parsed.filters)) {
@@ -615,20 +522,11 @@ const unreadCount = computed(() =>
 const activeFilterOptions = computed(() => filterOptions[state.activeTab])
 const activeTabMeta = computed(() => tabMeta[state.activeTab])
 
-const panelStyle = computed(() => ({
-  width: `${bounds.width}px`,
-  height: state.minimized ? 'auto' : `${bounds.height}px`,
-  left: `${bounds.left}px`,
-  top: `${bounds.top}px`,
-}))
-
 const persistState = () => {
   if (!hasStorage()) return
 
-  const snapshot: PersistedWindowState = {
-    minimized: state.minimized,
+  const snapshot: PersistedPanelState = {
     activeTab: state.activeTab,
-    bounds: { ...bounds },
     filters: {
       combat: { ...state.filters.combat },
       action: { ...state.filters.action },
@@ -664,73 +562,11 @@ const syncTabToRoute = (path: string) => {
   state.activeTab = nextTab
 }
 
-const handleWindowResize = () => {
-  if (typeof window === 'undefined') return
-
-  viewportWidth.value = window.innerWidth
-  viewportHeight.value = window.innerHeight
-  isNarrowViewport.value = viewportWidth.value <= narrowBreakpoint
-  Object.assign(bounds, clampBounds(bounds))
-}
-
-const stopPointerInteraction = () => {
-  dragState.active = false
-  resizeState.active = false
-  document.body.style.removeProperty('user-select')
-}
-
-const handlePointerMove = (event: PointerEvent) => {
-  if (dragState.active) {
-    Object.assign(
-      bounds,
-      clampBounds({
-        ...bounds,
-        left: dragState.left + event.clientX - dragState.pointerX,
-        top: dragState.top + event.clientY - dragState.pointerY,
-      }),
-    )
-    return
-  }
-
-  if (!resizeState.active) return
-
-  Object.assign(
-    bounds,
-    clampBounds({
-      ...bounds,
-      width: resizeState.width + event.clientX - resizeState.pointerX,
-      height: resizeState.height + event.clientY - resizeState.pointerY,
-    }),
-  )
-}
-
-const startDragging = (event: PointerEvent) => {
-  if (isNarrowViewport.value) return
-
-  const target = event.target as HTMLElement | null
-  if (target?.closest('button') || target?.closest('input')) return
-
-  dragState.active = true
-  dragState.pointerX = event.clientX
-  dragState.pointerY = event.clientY
-  dragState.left = bounds.left
-  dragState.top = bounds.top
-  document.body.style.userSelect = 'none'
-}
-
-const startResizing = (event: PointerEvent) => {
-  if (isNarrowViewport.value || state.minimized) return
-
-  resizeState.active = true
-  resizeState.pointerX = event.clientX
-  resizeState.pointerY = event.clientY
-  resizeState.width = bounds.width
-  resizeState.height = bounds.height
-  document.body.style.userSelect = 'none'
-}
-
 const setActiveTab = (tab: LogTab) => {
   state.activeTab = tab
+  if (props.isOpen) {
+    syncSeenToLatest(tab)
+  }
 }
 
 const toggleFilter = (type: string) => {
@@ -746,60 +582,40 @@ const clearActiveLogs = () => {
     props.onClearProfession?.()
   }
 
-  if (!state.minimized) {
+  if (props.isOpen) {
     syncSeenToLatest(state.activeTab)
   }
 }
 
-const minimizeWindow = () => {
-  syncSeenToLatest()
-  state.minimized = true
-  Object.assign(bounds, clampBounds(bounds))
+const handleToggle = () => {
+  emit('toggle')
 }
 
-const restoreWindow = () => {
-  state.minimized = false
-  syncSeenToLatest()
-  Object.assign(bounds, clampBounds(bounds))
+const handleClose = () => {
+  emit('close')
 }
 
 const formatType = (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
 
 onMounted(() => {
-  handleWindowResize()
-
   const persisted = readPersistedState()
   if (persisted) {
-    state.minimized = persisted.minimized
     state.activeTab = persisted.activeTab
     state.filters = persisted.filters
     state.lastSeen = persisted.lastSeen
-    Object.assign(bounds, clampBounds(persisted.bounds))
   } else {
-    Object.assign(bounds, getDefaultBounds())
-    syncSeenToLatest()
-  }
-
-  if (!state.minimized) {
     syncSeenToLatest()
   }
 
   syncTabToRoute(route.path)
 
-  window.addEventListener('resize', handleWindowResize)
-  window.addEventListener('pointermove', handlePointerMove)
-  window.addEventListener('pointerup', stopPointerInteraction)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleWindowResize)
-  window.removeEventListener('pointermove', handlePointerMove)
-  window.removeEventListener('pointerup', stopPointerInteraction)
-  document.body.style.removeProperty('user-select')
+  if (props.isOpen) {
+    syncSeenToLatest()
+  }
 })
 
 watch(latestSeenIds, () => {
-  if (!state.minimized) {
+  if (props.isOpen) {
     syncSeenToLatest()
   }
 })
@@ -812,21 +628,21 @@ watch(
 )
 
 watch(
-  () => state.minimized,
-  () => {
-    Object.assign(bounds, clampBounds(bounds))
+  () => props.isOpen,
+  (isOpen) => {
+    if (isOpen) {
+      syncSeenToLatest()
+    }
   },
 )
 
 watch(
   () => ({
-    minimized: state.minimized,
     activeTab: state.activeTab,
     combatFilters: state.filters.combat,
     actionFilters: state.filters.action,
     professionFilters: state.filters.profession,
     lastSeen: state.lastSeen,
-    bounds: { ...bounds },
   }),
   () => {
     persistState()
@@ -836,37 +652,36 @@ watch(
 </script>
 
 <template>
-  <Teleport to="body">
-    <section
-      class="floating-log-window"
-      :class="{ minimized: state.minimized, narrow: isNarrowViewport, dragging: dragState.active }"
-      :style="panelStyle"
+  <section class="log-sidebar" :class="{ open: props.isOpen, mobile: props.isMobile }">
+    <button
+      v-if="!props.isMobile"
+      type="button"
+      class="log-sidebar-rail"
+      :class="{ open: props.isOpen }"
+      :aria-expanded="props.isOpen"
+      aria-label="Toggle logs sidebar"
+      @click="handleToggle"
     >
-      <header class="floating-log-header" @pointerdown="startDragging">
-        <button
-          v-if="state.minimized"
-          type="button"
-          class="minimized-toggle"
-          @pointerdown.stop
-          @click="restoreWindow"
-        >
-          Logs ({{ unreadCount }})
-        </button>
+      <span class="log-sidebar-rail-label">Logs</span>
+      <span v-if="unreadCount > 0" class="log-sidebar-rail-count">{{ unreadCount }}</span>
+    </button>
 
-        <template v-else>
-          <div>
-            <div class="floating-log-title">Logs</div>
-            <div class="floating-log-subtitle">{{ activeTabMeta.limitText }}</div>
-          </div>
-          <div class="floating-log-actions">
-            <button type="button" class="ghost" @pointerdown.stop @click="clearActiveLogs">Clear</button>
-            <button type="button" class="ghost" @pointerdown.stop @click="minimizeWindow">Minimize</button>
-          </div>
-        </template>
+    <section v-if="props.isOpen || !props.isMobile" class="log-sidebar-panel" :class="{ open: props.isOpen, mobile: props.isMobile }">
+      <header class="log-sidebar-header">
+        <div>
+          <div class="log-sidebar-title">Logs</div>
+          <div class="log-sidebar-subtitle">{{ activeTabMeta.limitText }}</div>
+        </div>
+        <div class="log-sidebar-actions">
+          <button type="button" class="ghost" @click="clearActiveLogs">Clear</button>
+          <button type="button" class="ghost" @click="props.isMobile ? handleClose() : handleToggle()">
+            {{ props.isMobile ? 'Close' : 'Collapse' }}
+          </button>
+        </div>
       </header>
 
-      <div v-if="!state.minimized" class="floating-log-body">
-        <nav class="floating-log-tabs" aria-label="Log tabs">
+      <div class="log-sidebar-body">
+        <nav class="log-sidebar-tabs" aria-label="Log tabs">
           <button
             v-for="tab in tabs"
             :key="tab"
@@ -880,7 +695,7 @@ watch(
           </button>
         </nav>
 
-        <div class="floating-log-filters">
+        <div class="log-sidebar-filters">
           <button
             v-for="option in activeFilterOptions"
             :key="`${state.activeTab}-${option.id}`"
@@ -893,7 +708,7 @@ watch(
           </button>
         </div>
 
-        <div class="floating-log-list">
+        <div class="log-sidebar-list">
           <div v-if="activeEntries.length === 0" class="log-empty">
             {{ activeTabMeta.empty }}
           </div>
@@ -931,243 +746,312 @@ watch(
             </div>
           </div>
         </div>
-
-        <button
-          v-if="!isNarrowViewport"
-          type="button"
-          class="floating-log-resize-handle"
-          aria-label="Resize logs window"
-          @pointerdown.stop.prevent="startResizing"
-        ></button>
       </div>
     </section>
-  </Teleport>
+  </section>
 </template>
 
 <style scoped>
-.floating-log-window {
-  position: fixed;
-  z-index: 2400;
-  display: flex;
-  flex-direction: column;
+.log-sidebar {
+  display: grid;
+  grid-template-columns: var(--log-sidebar-rail-width, 3.1rem) minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
-  min-width: 260px;
-  min-height: 200px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
-  box-sizing: border-box;
-  border-radius: 20px;
+  border-radius: 22px;
   background: rgba(14, 20, 33, 0.96);
   border: 1px solid rgba(80, 98, 130, 0.35);
   box-shadow: 0 18px 38px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(16px);
 }
 
-.floating-log-window.minimized {
-  min-height: 0;
-  width: 240px;
+.log-sidebar.mobile {
+  display: block;
+  border-radius: 24px;
 }
 
-.floating-log-window.dragging {
-  cursor: grabbing;
-}
-
-.floating-log-header {
+.log-sidebar-rail {
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.9rem 0.4rem;
+  border: 0;
+  border-right: 1px solid rgba(80, 98, 130, 0.22);
+  background: linear-gradient(180deg, rgba(20, 31, 48, 0.95), rgba(12, 18, 30, 0.98));
+  color: #d9e7ff;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.log-sidebar-rail:hover,
+.log-sidebar-rail.open {
+  background: linear-gradient(180deg, rgba(28, 42, 63, 0.98), rgba(17, 25, 39, 0.98));
+  color: #f0c566;
+}
+
+.log-sidebar-rail-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.log-sidebar-rail-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.45rem;
+  padding: 0.16rem 0.28rem;
+  border-radius: 999px;
+  background: rgba(240, 197, 102, 0.18);
+  color: #ffd98c;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.log-sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  opacity: 0;
+  transform: translateX(-0.75rem);
+  pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.log-sidebar-panel.open,
+.log-sidebar-panel.mobile {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.log-sidebar-header {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.9rem 1rem;
-  background: linear-gradient(140deg, rgba(24, 34, 52, 0.96), rgba(16, 24, 39, 0.96));
-  border-bottom: 1px solid rgba(80, 98, 130, 0.24);
-  cursor: grab;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 1px solid rgba(80, 98, 130, 0.2);
 }
 
-.floating-log-title {
+.log-sidebar-title {
   font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #eef5ff;
+  color: #e9f2ff;
 }
 
-.floating-log-subtitle {
+.log-sidebar-subtitle {
+  margin-top: 0.2rem;
   font-size: 0.78rem;
-  color: #8fa2c6;
+  color: #91a3c4;
 }
 
-.floating-log-actions {
+.log-sidebar-actions {
   display: flex;
   gap: 0.5rem;
 }
 
-.floating-log-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  position: relative;
-  gap: 0.9rem;
-  padding: 0.9rem;
-  min-height: 0;
-}
-
-.floating-log-tabs {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.tab-button,
-.filter-chip,
 .ghost,
-.minimized-toggle {
-  border: 1px solid rgba(92, 112, 146, 0.35);
+.tab-button,
+.filter-chip {
+  border: 1px solid rgba(99, 121, 158, 0.28);
+  background: rgba(25, 36, 54, 0.78);
+  color: #d9e7ff;
+}
+
+.ghost {
+  padding: 0.42rem 0.72rem;
   border-radius: 999px;
-  background: rgba(23, 32, 49, 0.84);
-  color: #d8e4ff;
+  font: inherit;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
-.tab-button,
-.filter-chip,
-.ghost {
-  padding: 0.45rem 0.85rem;
-}
-
-.tab-button:hover,
-.filter-chip:hover,
 .ghost:hover,
-.minimized-toggle:hover {
-  transform: translateY(-1px);
-  border-color: rgba(116, 210, 255, 0.55);
+.tab-button:hover,
+.filter-chip:hover {
+  border-color: rgba(240, 197, 102, 0.52);
+  color: #f0c566;
 }
 
-.tab-button.active,
-.filter-chip.active {
-  background: rgba(116, 210, 255, 0.18);
-  border-color: rgba(116, 210, 255, 0.75);
-  color: #c8f0ff;
+.ghost:active,
+.tab-button:active,
+.filter-chip:active {
+  transform: translateY(1px);
+}
+
+.log-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 0;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.log-sidebar-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
 }
 
 .tab-button {
   display: inline-flex;
-  gap: 0.45rem;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.tab-button.active {
+  background: rgba(66, 139, 193, 0.22);
+  border-color: rgba(116, 210, 255, 0.75);
+  color: #c8f0ff;
 }
 
 .tab-count {
-  color: #8fa2c6;
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  padding: 0.1rem 0.38rem;
+  border-radius: 999px;
+  background: rgba(10, 16, 28, 0.78);
+  font-size: 0.72rem;
 }
 
-.floating-log-filters {
+.log-sidebar-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
-.floating-log-list {
+.filter-chip {
+  padding: 0.36rem 0.72rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.filter-chip.active {
+  background: rgba(76, 159, 106, 0.18);
+  border-color: rgba(125, 220, 154, 0.5);
+  color: #d8ffe2;
+}
+
+.log-sidebar-list {
   display: flex;
-  flex: 1;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.75rem;
   min-height: 0;
-  padding: 0.75rem;
+  padding-right: 0.25rem;
+  overflow-y: auto;
+}
+
+.log-empty {
+  padding: 1rem;
   border-radius: 16px;
-  background: rgba(12, 18, 30, 0.92);
-  border: 1px solid rgba(60, 80, 110, 0.32);
-  overflow: auto;
+  background: rgba(16, 24, 38, 0.78);
+  color: #99aac9;
+  text-align: center;
 }
 
 .log-row {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding-bottom: 0.45rem;
-  border-bottom: 1px solid rgba(60, 80, 110, 0.2);
-}
-
-.log-row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+  gap: 0.45rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 37, 0.82);
+  border: 1px solid rgba(80, 98, 130, 0.18);
 }
 
 .log-meta {
   display: flex;
-  gap: 0.55rem;
-  align-items: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
   font-size: 0.72rem;
-  color: #d7e3fd;
+  color: #8fa2c6;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .log-time {
-  color: #7f92b6;
-  font-variant-numeric: tabular-nums;
+  color: #a8b8d8;
 }
 
 .log-type {
-  text-transform: uppercase;
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
-  color: #9fb0d3;
+  color: #7ec7ff;
 }
 
 .log-message {
-  color: #e2ebff;
-  font-size: 0.84rem;
-  line-height: 1.35;
+  color: #e7eefc;
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 
 .log-focus {
-  color: #c8f0ff;
+  color: #f0c566;
+  font-weight: 700;
+  cursor: help;
 }
 
-.log-empty {
-  color: #8fa2c6;
-  font-size: 0.84rem;
-}
+@media (max-width: 1024px) {
+  .log-sidebar-header {
+    flex-direction: column;
+  }
 
-.minimized-toggle {
-  width: 100%;
-  padding: 0.65rem 0.9rem;
-  text-align: left;
-}
+  .log-sidebar-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 
-.floating-log-resize-handle {
-  position: absolute;
-  right: 0.3rem;
-  bottom: 0.3rem;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 0;
-  background:
-    linear-gradient(135deg, transparent 37%, rgba(116, 210, 255, 0.45) 37%, rgba(116, 210, 255, 0.45) 50%, transparent 50%),
-    linear-gradient(135deg, transparent 55%, rgba(116, 210, 255, 0.75) 55%, rgba(116, 210, 255, 0.75) 68%, transparent 68%);
-  cursor: nwse-resize;
-  opacity: 0.85;
+  .log-sidebar-tabs {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
-  .floating-log-window {
-    left: 12px !important;
-    width: calc(100vw - 24px) !important;
-    max-width: calc(100vw - 24px);
+  .log-sidebar {
+    height: 100%;
   }
 
-  .floating-log-window.minimized {
-    width: calc(100vw - 24px) !important;
+  .log-sidebar.mobile .log-sidebar-panel {
+    height: 100%;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
   }
 
-  .floating-log-header {
-    cursor: default;
+  .log-sidebar-header {
+    padding: 0.95rem 0.95rem 0.8rem;
   }
 
-  .log-meta {
-    gap: 0.4rem;
+  .log-sidebar-body {
+    padding: 0.85rem 0.95rem 0.95rem;
+  }
+
+  .log-sidebar-list {
+    padding-right: 0;
   }
 }
 </style>
