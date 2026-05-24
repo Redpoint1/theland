@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { RouterLink, RouterView } from 'vue-router'
 import { useGameStore, type ActionItem, type ProfessionAction } from './stores/game'
 import InfoTooltip from './components/InfoTooltip.vue'
+import FloatingLogWindow from './components/FloatingLogWindow.vue'
 
 const game = useGameStore()
 const {
@@ -18,6 +19,9 @@ const {
   activeTask,
   stats,
   skillBonuses,
+  combatLogs,
+  actionLogs,
+  professionLogs,
 } = storeToRefs(game)
 
 const activeActionName = computed(() => {
@@ -197,6 +201,14 @@ onBeforeUnmount(() => {
       </InfoTooltip>
     </section>
     <RouterView />
+    <FloatingLogWindow
+      :combat-logs="combatLogs"
+      :action-logs="actionLogs"
+      :profession-logs="professionLogs"
+      :on-clear-combat="game.clearCombatLogs"
+      :on-clear-action="game.clearActionLogs"
+      :on-clear-profession="game.clearProfessionLogs"
+    />
   </div>
 </template>
 

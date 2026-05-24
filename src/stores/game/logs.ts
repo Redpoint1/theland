@@ -44,8 +44,8 @@ export const useLogbook = () => {
       message,
     })
 
-    if (professionLogs.value.length > 500) {
-      professionLogs.value.splice(0, professionLogs.value.length - 500)
+    if (professionLogs.value.length > 1000) {
+      professionLogs.value.splice(0, professionLogs.value.length - 1000)
     }
   }
 
@@ -57,8 +57,8 @@ export const useLogbook = () => {
       message,
     })
 
-    if (actionLogs.value.length > 500) {
-      actionLogs.value.splice(0, actionLogs.value.length - 500)
+    if (actionLogs.value.length > 1000) {
+      actionLogs.value.splice(0, actionLogs.value.length - 1000)
     }
   }
 

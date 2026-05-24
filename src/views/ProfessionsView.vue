@@ -3,8 +3,6 @@ import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore, type ProfessionKey } from '../stores/game'
 import ProfessionCard from '../components/ProfessionCard.vue'
-import LogPanel from '../components/LogPanel.vue'
-import InfoTooltip from '../components/InfoTooltip.vue'
 
 const game = useGameStore()
 const {
@@ -13,7 +11,6 @@ const {
   professionBonuses,
   professionActionProgress,
   professionActionJustCompleted,
-  professionLogs,
   activeTask,
 } = storeToRefs(game)
 const { getItemDef, getItemQuantity, actionDurationMs } = game
@@ -62,100 +59,6 @@ const activeProfessionActionId = computed(() =>
   activeTask.value.type === 'profession' ? activeTask.value.actionId : undefined,
 )
 
-const logEntries = computed(() => professionLogs.value.slice().reverse())
-
-interface ParsedProfessionLog {
-  before: string
-  focus?: string
-  after: string
-  tooltipTitle?: string
-  tooltipLines?: string[]
-}
-
-const parseProfessionLog = (log: { message: string; type: string }): ParsedProfessionLog => {
-  const message = log.message
-
-  const started = message.match(/^Started (.+)\.$/)
-  if (started) {
-    const [, actionName] = started
-    return {
-      before: 'Started ',
-      focus: actionName,
-      after: '.',
-      tooltipTitle: 'Profession Action Started',
-      tooltipLines: ['This profession action is now active.', 'It will consume required inputs each completion.'],
-    }
-  }
-
-  const stopped = message.match(/^Stopped (.+)\.$/)
-  if (stopped) {
-    const [, actionName] = stopped
-    return {
-      before: 'Stopped ',
-      focus: actionName,
-      after: '.',
-      tooltipTitle: 'Profession Action Stopped',
-      tooltipLines: ['The profession loop is paused for this action.'],
-    }
-  }
-
-  const requires = message.match(/^(.+) requires (.+) level (\d+)\.$/)
-  if (requires) {
-    const [, actionName, professionName, levelRequired] = requires
-    return {
-      before: `${actionName} requires `,
-      focus: `${professionName} level ${levelRequired}`,
-      after: '.',
-      tooltipTitle: 'Level Requirement',
-      tooltipLines: ['Action is locked until required profession level is reached.'],
-    }
-  }
-
-  const cannotStart = message.match(/^Cannot start (.+) - missing (.+)\.$/)
-  if (cannotStart) {
-    const [, actionName, missingList] = cannotStart
-    return {
-      before: `Cannot start ${actionName} - missing `,
-      focus: missingList,
-      after: '.',
-      tooltipTitle: 'Missing Inputs',
-      tooltipLines: ['Collect or craft the listed materials before starting this action.'],
-    }
-  }
-
-  const completed = message.match(/^Completed (.+)\. \+(\d+) (.+) XP, (.+)\.$/)
-  if (completed) {
-    const [, actionName, xpGain, professionName, rewards] = completed
-    return {
-      before: 'Completed ',
-      focus: actionName,
-      after: `. +${xpGain} ${professionName} XP, ${rewards}.`,
-      tooltipTitle: 'Profession Completion',
-      tooltipLines: [
-        `Profession XP gained: +${xpGain} ${professionName} XP`,
-        `Rewards generated: ${rewards}`,
-      ],
-    }
-  }
-
-  const stoppedMissing = message.match(/^Stopped (.+) - missing (.+)\.$/)
-  if (stoppedMissing) {
-    const [, actionName, missingList] = stoppedMissing
-    return {
-      before: `Stopped ${actionName} - missing `,
-      focus: missingList,
-      after: '.',
-      tooltipTitle: 'Action Auto-Stopped',
-      tooltipLines: ['Action ended because required inputs were no longer available.'],
-    }
-  }
-
-  return {
-    before: message,
-    after: '',
-  }
-}
-
 const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
 </script>
 
@@ -200,42 +103,6 @@ const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
         :get-item-quantity="getItemQuantity"
         :on-toggle="game.toggleProfessionAction"
       />
-
-      <LogPanel
-        title="Profession Log"
-        subtitle="Latest 500 events retained."
-        :entries="logEntries"
-        :on-clear="game.clearProfessionLogs"
-      >
-        <template #row="{ log }">
-          <span class="log-time">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
-          <span class="log-type">{{ log.type }}</span>
-          <div class="log-message">
-            <template v-if="parseProfessionLog(log).focus && parseProfessionLog(log).tooltipLines">
-              {{ parseProfessionLog(log).before }}
-              <InfoTooltip max-width="520px" placement="bottom" align="left" teleport>
-                <template #trigger>
-                  <span class="log-focus">{{ parseProfessionLog(log).focus }}</span>
-                </template>
-                <template #content>
-                  <div class="info-tooltip-title">{{ parseProfessionLog(log).tooltipTitle }}</div>
-                  <div
-                    v-for="line in parseProfessionLog(log).tooltipLines"
-                    :key="line"
-                    class="info-tooltip-line"
-                  >
-                    {{ line }}
-                  </div>
-                </template>
-              </InfoTooltip>
-              {{ parseProfessionLog(log).after }}
-            </template>
-            <template v-else>
-              {{ log.message }}
-            </template>
-          </div>
-        </template>
-      </LogPanel>
     </section>
   </main>
 </template>
@@ -266,26 +133,6 @@ const getItemName = (itemId: string) => getItemDef(itemId)?.name ?? itemId
 .toggle.active {
   background: linear-gradient(120deg, #74d2ff, #6ff2c5);
   color: #0b111b;
-}
-
-.log-focus {
-  color: #c8f0ff;
-}
-
-.log-time {
-  color: #7f92b6;
-  font-variant-numeric: tabular-nums;
-}
-
-.log-type {
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  color: #9fb0d3;
-}
-
-.log-message {
-  color: #d9e3ff;
 }
 
 </style>

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useGameStore, type CombatLogEntry, type CombatLogType } from '../stores/game'
+import { useGameStore } from '../stores/game'
 import ProgressBar from '../components/ProgressBar.vue'
-import LogPanel from '../components/LogPanel.vue'
 import InfoTooltip from '../components/InfoTooltip.vue'
 
 const game = useGameStore()
@@ -11,7 +10,6 @@ const {
   zones,
   combat,
   combatRewards,
-  combatLogs,
   currentZone,
   currentEnemyDropPreview,
   activeBuffs,
@@ -20,10 +18,7 @@ const {
   selectedSpellId,
   selectedSpell,
   selectedSpellManaCost,
-  character,
-  stats,
   skills,
-  skillBonuses,
   playerHp,
   maxHp,
   mana,
@@ -36,29 +31,6 @@ const isFighting = computed(() => activeTask.value.type === 'combat')
 const isResting = computed(() => activeTask.value.type === 'rest')
 const canCastSelectedSpell = computed(() =>
   activeTask.value.type === 'combat' && mana.value >= selectedSpellManaCost.value,
-)
-
-const filters = ref<Record<CombatLogType, boolean>>({
-  combat: true,
-  damage: true,
-  kill: true,
-  rest: true,
-  system: true,
-})
-
-const filterOptions: Array<{ id: CombatLogType; label: string }> = [
-  { id: 'combat', label: 'Combat' },
-  { id: 'damage', label: 'Damage' },
-  { id: 'kill', label: 'Kills' },
-  { id: 'rest', label: 'Rest' },
-  { id: 'system', label: 'System' },
-]
-
-const filteredLogs = computed(() =>
-  combatLogs.value
-    .filter((log: CombatLogEntry) => filters.value[log.type])
-    .slice()
-    .reverse(),
 )
 
 const zoneEnemySummary = (zoneId: string) => {
@@ -97,156 +69,6 @@ const filteredSpells = computed(() =>
     ? availableSpells.value
     : availableSpells.value.filter((spell) => spell.effectType === spellTypeFilter.value),
 )
-
-interface ParsedCombatLog {
-  before: string
-  focus?: string
-  after: string
-  tooltipTitle?: string
-  tooltipLines?: string[]
-}
-
-const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
-  const message = log.message
-
-  const defeated = message.match(/^Defeated (.+) \(Lv\. (\d+)\)\. Rewards: \+(\d+) XP, Drops: (.+)\.$/)
-  if (defeated) {
-    const [, enemyName, levelText, xpText, dropsText] = defeated
-    return {
-      before: 'Defeated ',
-      focus: enemyName,
-      after: ` (Lv. ${levelText}). Rewards: +${xpText} XP, Drops: ${dropsText}.`,
-      tooltipTitle: `${enemyName} Defeated`,
-      tooltipLines: [
-        `Enemy level: ${levelText}`,
-        `Character XP reward: +${xpText}`,
-        `Drop outcome: ${dropsText}`,
-        'Combat XP and stat XP are also awarded from zone scaling.',
-      ],
-    }
-  }
-
-  const playerHit = message.match(/^You hit (.+) for (\d+) damage\.$/)
-  if (playerHit) {
-    const [, enemyName, damageText] = playerHit
-    const playerPower =
-      character.value.level * 2 +
-      stats.value.Strength.value * 1.4 +
-      stats.value.Agility.value * 1.1 +
-      skills.value.Combat.level * 2 +
-      stats.value.Spirit.value * 0.4
-
-    return {
-      before: `You hit ${enemyName} for `,
-      focus: `${damageText} damage`,
-      after: '.',
-      tooltipTitle: 'Outgoing Damage',
-      tooltipLines: [
-        'Formula: floor((PlayerPower - EnemyPower×0.5 + random[0..6]) × CombatDamageMultiplier)',
-        `Current PlayerPower terms: Lv(${character.value.level}) Str(${stats.value.Strength.value}) Agi(${stats.value.Agility.value}) Combat(${skills.value.Combat.level}) Spirit(${stats.value.Spirit.value})`,
-        `Current PlayerPower estimate: ${Math.floor(playerPower)}`,
-        `Global combat damage bonus: +${formatPercent(skillBonuses.value.combatDamageMultiplier - 1)}`,
-      ],
-    }
-  }
-
-  const enemyHit = message.match(/^(.+) hits you for (\d+) damage \(received\)\.$/)
-  if (enemyHit) {
-    const [, enemyName, damageText] = enemyHit
-    const mitigation = stats.value.Vitality.value * 0.8 + stats.value.Agility.value * 0.4
-    return {
-      before: `${enemyName} hits you for `,
-      focus: `${damageText} damage`,
-      after: ' (received).',
-      tooltipTitle: 'Incoming Damage',
-      tooltipLines: [
-        'Formula: floor((EnemyPower - Mitigation + random[0..4]) × (1 - DamageReduction))',
-        `Current mitigation: ${Math.floor(mitigation)} (Vitality ${stats.value.Vitality.value}, Agility ${stats.value.Agility.value})`,
-        `Global damage reduction: +${formatPercent(skillBonuses.value.combatDamageReduction)}`,
-      ],
-    }
-  }
-
-  const encountered = message.match(/^Encountered (.+) \(Lv\. (\d+)\) in (.+)\.$/)
-  if (encountered) {
-    const [, enemyName, levelText, zoneName] = encountered
-    return {
-      before: 'Encountered ',
-      focus: enemyName,
-      after: ` (Lv. ${levelText}) in ${zoneName}.`,
-      tooltipTitle: 'Encounter Target',
-      tooltipLines: [`Enemy level: ${levelText}`, `Zone: ${zoneName}`],
-    }
-  }
-
-  const spellHit = message.match(/^(.+) hits (.+) for (\d+) spell damage\.$/)
-  if (spellHit) {
-    const [, spellName, enemyName, damageText] = spellHit
-    return {
-      before: `${spellName} hits ${enemyName} for `,
-      focus: `${damageText} damage`,
-      after: '.',
-      tooltipTitle: `${spellName} Damage`,
-      tooltipLines: [
-        'Formula: floor((base + level scaling + stat scaling + skill scaling + random) × CombatDamageMultiplier)',
-        `Current Intelligence: ${stats.value.Intelligence.value}`,
-        `Current Arcana: ${skills.value.Arcana.level}`,
-        `Combat multiplier: +${formatPercent(skillBonuses.value.combatDamageMultiplier - 1)}`,
-      ],
-    }
-  }
-
-  const spellHeal = message.match(/^(.+) restores (\d+) HP\.$/)
-  if (spellHeal) {
-    const [, spellName, healText] = spellHeal
-    return {
-      before: `${spellName} restores `,
-      focus: `${healText} HP`,
-      after: '.',
-      tooltipTitle: `${spellName} Healing`,
-      tooltipLines: [
-        'Formula: floor((base + level scaling + stat scaling + skill scaling + random) × RegenMultiplier)',
-        `Current Spirit: ${stats.value.Spirit.value}`,
-        `Current Arcana: ${skills.value.Arcana.level}`,
-        `Regen multiplier bonus: +${formatPercent(skillBonuses.value.regenMultiplier - 1)}`,
-      ],
-    }
-  }
-
-  const buffApplied = message.match(/^(.+) empowers you for (\d+) ticks \(\+(\d+)% combat, \+(\d+)% spell, \+(\d+)% reduction\)\.$/)
-  if (buffApplied) {
-    const [, spellName, tickText, combatText, spellText, reductionText] = buffApplied
-    return {
-      before: `${spellName} empowers you for `,
-      focus: `${tickText} ticks`,
-      after: ` (+${combatText}% combat, +${spellText}% spell, +${reductionText}% reduction).`,
-      tooltipTitle: `${spellName} Buff`,
-      tooltipLines: [
-        `Duration: ${tickText} combat ticks`,
-        `Combat damage bonus: +${combatText}%`,
-        `Spell power bonus: +${spellText}%`,
-        `Damage reduction bonus: +${reductionText}%`,
-      ],
-    }
-  }
-
-  const buffFaded = message.match(/^(.+) has faded\.$/)
-  if (buffFaded) {
-    const [, buffName] = buffFaded
-    return {
-      before: '',
-      focus: buffName,
-      after: ' has faded.',
-      tooltipTitle: 'Buff Expired',
-      tooltipLines: ['The effect is no longer active and its bonuses no longer apply.'],
-    }
-  }
-
-  return {
-    before: message,
-    after: '',
-  }
-}
 </script>
 
 <template>
@@ -499,50 +321,6 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
           </div>
         </div>
       </div>
-
-      <LogPanel
-        title="Combat Log"
-        subtitle="Latest 1000 events retained."
-        :entries="filteredLogs"
-        :on-clear="game.clearCombatLogs"
-      >
-        <template #row="{ log }">
-          <span class="log-time">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
-          <span class="log-type">{{ log.type }}</span>
-          <div class="log-message">
-            <template v-if="parseCombatLog(log).focus && parseCombatLog(log).tooltipLines">
-              {{ parseCombatLog(log).before }}
-              <InfoTooltip max-width="560px" placement="bottom" align="left" teleport>
-                <template #trigger>
-                  <span class="log-focus">{{ parseCombatLog(log).focus }}</span>
-                </template>
-                <template #content>
-                  <div class="info-tooltip-title">{{ parseCombatLog(log).tooltipTitle }}</div>
-                  <div
-                    v-for="line in parseCombatLog(log).tooltipLines"
-                    :key="line"
-                    class="info-tooltip-line"
-                  >
-                    {{ line }}
-                  </div>
-                </template>
-              </InfoTooltip>
-              {{ parseCombatLog(log).after }}
-            </template>
-            <template v-else>
-              {{ log.message }}
-            </template>
-          </div>
-        </template>
-        <template #filters>
-          <div class="log-filters">
-            <label v-for="option in filterOptions" :key="option.id" class="filter-pill">
-              <input v-model="filters[option.id]" type="checkbox" />
-              <span>{{ option.label }}</span>
-            </label>
-          </div>
-        </template>
-      </LogPanel>
     </section>
   </main>
 </template>
@@ -746,12 +524,6 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
   cursor: not-allowed;
 }
 
-.log-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
 .filter-pill {
   display: inline-flex;
   align-items: center;
@@ -767,26 +539,6 @@ const parseCombatLog = (log: { message: string }): ParsedCombatLog => {
 
 .filter-pill input {
   accent-color: #74d2ff;
-}
-
-.log-focus {
-  color: #c8f0ff;
-}
-
-.log-time {
-  color: #7f92b6;
-  font-variant-numeric: tabular-nums;
-}
-
-.log-type {
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  color: #9fb0d3;
-}
-
-.log-message {
-  color: #d9e3ff;
 }
 
 @media (max-width: 720px) {
