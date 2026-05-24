@@ -14,7 +14,6 @@ const {
   tickMs,
   paused,
   character,
-  currencyBreakdown,
   playerHp,
   mana,
   maxMana,
@@ -32,13 +31,7 @@ const {
 } = storeToRefs(game)
 const { actionDurationMs, increaseStatAllocation, decreaseStatAllocation, applyStatAllocations } = game
 
-const totalCopper = computed(
-  () =>
-    currencyBreakdown.value.gold * 10000 +
-    currencyBreakdown.value.silver * 100 +
-    currencyBreakdown.value.copper,
-)
-const readableCurrency = computed(() => game.formatCopperToCurrency(totalCopper.value))
+const readableCurrency = computed(() => game.formatCopperToCurrency(game.currency.copper))
 
 const idleProgressValue = computed(() =>
   idleActionJustCompleted.value ? actionDurationMs : idleActionProgress.value,
@@ -176,10 +169,6 @@ const parseActionLog = (log: { message: string; type: string }): ParsedActionLog
           <div>
             <span class="currency-label">Currency</span>
             <span class="currency-value">{{ readableCurrency }}</span>
-          </div>
-          <div>
-            <span class="currency-label">Total Copper</span>
-            <span class="currency-value">{{ totalCopper }}</span>
           </div>
         </div>
       </div>

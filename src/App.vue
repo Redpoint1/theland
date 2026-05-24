@@ -144,7 +144,6 @@ onBeforeUnmount(() => {
           <div class="info-tooltip-line">{{ readableCurrency }}</div>
           <div class="info-tooltip-line">Explicit: {{ game.formatCopperToCurrency(totalCopper, { showAllUnits: true }) }}</div>
           <div class="info-tooltip-line info-tooltip-muted">1 Gold = 100 Silver = 10,000 Copper.</div>
-          <div class="info-tooltip-line info-tooltip-muted">Total Copper: {{ totalCopper }}</div>
         </template>
       </InfoTooltip>
 
